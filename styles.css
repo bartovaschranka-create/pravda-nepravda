@@ -364,9 +364,25 @@ button.secondary:hover,
 
 .summary-card,
 .ai-status,
+.topic-intro,
+.recommended-section,
+.year-section,
+.related-section,
+.statements-section,
 .quote-cards-section,
 .timeline-section {
   margin-bottom: 1.25rem;
+}
+
+.topic-intro,
+.recommended-section,
+.year-section,
+.related-section,
+.statements-section {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  padding: 1rem;
 }
 
 .ai-status {
@@ -450,6 +466,76 @@ button.secondary:hover,
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 700;
+}
+
+.score-label {
+  color: #334155;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.time-context {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.tag-list,
+.related-topics,
+.year-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.tag,
+.related-chip,
+.year-chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #334155;
+  padding: 0.28rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.related-chip,
+.year-chip {
+  cursor: pointer;
+}
+
+.related-chip:hover,
+.year-chip:hover,
+.year-chip.is-active {
+  border-color: rgba(15, 118, 110, 0.35);
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--accent-dark);
+}
+
+.recommended-list,
+.statements-list {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0;
+  padding-left: 1.2rem;
+}
+
+.recommended-list a {
+  color: var(--blue);
+  font-weight: 800;
+}
+
+.recommended-list p,
+.statement-item p {
+  margin-top: 0.2rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.statement-item {
+  border-left: 3px solid var(--line);
+  padding-left: 0.75rem;
 }
 
 .excerpt-label {

@@ -123,6 +123,44 @@
 
         <div id="ai-status" class="ai-status hidden" role="status"></div>
 
+        <section id="topic-intro" class="topic-intro hidden" aria-labelledby="topic-intro-title">
+          <p class="eyebrow">Úvod k tématu</p>
+          <h3 id="topic-intro-title"></h3>
+          <p id="topic-intro-text"></p>
+        </section>
+
+        <section id="recommended-section" class="recommended-section hidden" aria-labelledby="recommended-title">
+          <div class="section-head">
+            <p class="eyebrow">Co stojí za přečtení</p>
+            <h3 id="recommended-title">Doporučené zdroje</h3>
+          </div>
+          <ol id="recommended-list" class="recommended-list"></ol>
+        </section>
+
+        <section id="year-section" class="year-section hidden" aria-labelledby="year-title">
+          <div class="section-head">
+            <p class="eyebrow">Časová osa</p>
+            <h3 id="year-title">Filtrovat podle roku</h3>
+          </div>
+          <div id="year-filter" class="year-filter"></div>
+        </section>
+
+        <section id="related-section" class="related-section hidden" aria-labelledby="related-title">
+          <div class="section-head">
+            <p class="eyebrow">Související témata</p>
+            <h3 id="related-title">Navazující hledání</h3>
+          </div>
+          <div id="related-topics" class="related-topics"></div>
+        </section>
+
+        <section id="statements-section" class="statements-section hidden" aria-labelledby="statements-title">
+          <div class="section-head">
+            <p class="eyebrow">Výroky v čase</p>
+            <h3 id="statements-title">Chronologie citací</h3>
+          </div>
+          <div id="statements-list" class="statements-list"></div>
+        </section>
+
         <section id="quote-cards-section" class="quote-cards-section hidden" aria-labelledby="quote-cards-title">
           <div class="section-head">
             <p class="eyebrow">TOP zdroje</p>
@@ -150,6 +188,9 @@
           <time></time>
         </div>
         <p class="match-note"></p>
+        <p class="score-label"></p>
+        <p class="time-context"></p>
+        <div class="tag-list"></div>
         <p class="excerpt-label">Zkrácený výňatek ze zdroje</p>
         <blockquote></blockquote>
         <p class="relevance"></p>
@@ -167,6 +208,9 @@
           </div>
           <h4></h4>
           <p class="match-note"></p>
+          <p class="score-label"></p>
+          <p class="time-context"></p>
+          <div class="tag-list"></div>
           <p class="excerpt-label">Zkrácený výňatek ze zdroje</p>
           <blockquote></blockquote>
           <dl class="source-detail">
