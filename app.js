@@ -15,9 +15,14 @@ const emptyState = document.querySelector("#empty-state");
 const summaryCard = document.querySelector("#summary-card");
 const summaryText = document.querySelector("#summary-text");
 const aiStatus = document.querySelector("#ai-status");
+const personProfile = document.querySelector("#person-profile");
+const personAvatar = document.querySelector("#person-avatar");
+const personName = document.querySelector("#person-name");
+const personDescription = document.querySelector("#person-description");
 const topicIntro = document.querySelector("#topic-intro");
 const topicIntroTitle = document.querySelector("#topic-intro-title");
 const topicIntroText = document.querySelector("#topic-intro-text");
+const topicStats = document.querySelector("#topic-stats");
 const recommendedSection = document.querySelector("#recommended-section");
 const recommendedList = document.querySelector("#recommended-list");
 const yearSection = document.querySelector("#year-section");
@@ -32,8 +37,8 @@ const timelineTemplate = document.querySelector("#timeline-item-template");
 const quoteCardTemplate = document.querySelector("#quote-card-template");
 const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
-const AI_RESEARCH_ENDPOINT = "api/research";
-const DEFAULT_YEARS = [1998, 2005, 2011, 2014, 2017, 2021, 2026];
+const RESEARCH_ENDPOINT = "api/research";
+const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
 
 const TERM_EXPANSIONS = [
   {
@@ -53,8 +58,9 @@ const sampleRecords = [
     title: "Archivní rozhovor k tématu",
     source: "Mediální archiv",
     excerpt: "",
-    relevance: "Zdroj je relevantní, protože může obsahovat přímé vyjádření osoby v dřívějším období.",
-    url: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+rozhovor+2014"
+    relevance: "Archivní rozhovor ukazuje, jak se osoba k tématu vyjadřovala v minulosti.",
+    directUrl: "",
+    searchUrl: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+rozhovor+2014"
   },
   {
     date: "2018-09-18",
@@ -62,8 +68,9 @@ const sampleRecords = [
     title: "Článek s kontextem k veřejnému výroku",
     source: "Zpravodajský web",
     excerpt: "",
-    relevance: "Článek může doplnit časovou osu a pomoci porovnat pozdější vyjádření s předchozím kontextem.",
-    url: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+2018"
+    relevance: "Článek popisuje průběh událostí a dobovou veřejnou debatu.",
+    directUrl: "",
+    searchUrl: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+2018"
   },
   {
     date: "2022-04-15",
@@ -71,8 +78,9 @@ const sampleRecords = [
     title: "Tisková zpráva veřejné instituce",
     source: "Veřejná databáze",
     excerpt: "",
-    relevance: "Oficiální záznam může potvrdit datum, instituci a rámec události bez hodnocení osoby.",
-    url: "https://www.google.com/search?q=obil%C3%AD+Ukrajina+tiskov%C3%A1+zpr%C3%A1va+2022"
+    relevance: "Oficiální dokument obsahuje veřejně dostupné informace vztahující se k tématu.",
+    directUrl: "",
+    searchUrl: "https://www.google.com/search?q=obil%C3%AD+Ukrajina+tiskov%C3%A1+zpr%C3%A1va+2022"
   },
   {
     date: "2023-09-21",
@@ -80,8 +88,9 @@ const sampleRecords = [
     title: "Veřejný příspěvek na sociální síti",
     source: "X / Facebook / veřejný profil",
     excerpt: "",
-    relevance: "Veřejný profil může být relevantní tam, kde osoba vyjádřila postoj mimo tradiční média.",
-    url: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+site%3Ax.com+OR+site%3Afacebook.com"
+    relevance: "Veřejný příspěvek zachycuje dobovou reakci mimo tradiční média.",
+    directUrl: "",
+    searchUrl: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+site%3Ax.com+OR+site%3Afacebook.com"
   },
   {
     date: "2024-08-05",
@@ -90,7 +99,8 @@ const sampleRecords = [
     source: "Investigativní web",
     excerpt: "",
     relevance: "Investigativní zdroj může upozornit na časovou návaznost, dokumenty nebo veřejně dostupná data.",
-    url: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+investigace"
+    directUrl: "",
+    searchUrl: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+investigace"
   }
 ];
 
@@ -148,7 +158,7 @@ const searchTargets = [
     type: "Tisková zpráva",
     priority: 90,
     group: "top",
-    tags: ["Parlament", "Tisková zpráva"],
+    tags: ["Parlament", "Tisková zpráva", "Soud", "Policie"],
     build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Apsp.cz+OR+site%3Asenat.cz+OR+site%3Avlada.gov.cz${dates.google}`
   },
   {
@@ -180,7 +190,7 @@ const searchTargets = [
     type: "Investigativní web",
     priority: 86,
     group: "top",
-    tags: ["Investigativa", "Archiv"],
+    tags: ["Investigativa", "Archiv", "Soud", "Policie"],
     build: (query, dates) => `https://www.google.com/search?q=${query}+investigace+OR+anal%C3%BDza+OR+dokumenty+site%3Ainvestigace.cz+OR+site%3Ahlidacipes.org+OR+site%3Arespekt.cz${dates.google}`
   },
   {
@@ -355,8 +365,8 @@ function buildGeneratedRecords(filters) {
     const termWeight = termIndex === 0 ? 160 : Math.max(35, 70 - termIndex * 6);
     const personWeight = personIndex === 0 ? 20 : 8;
     const matchLabel = isExact
-      ? "nalezeno podle přesného dotazu"
-      : `nalezeno podle souvisejícího výrazu: ${queryText}`;
+      ? "Přesná shoda tématu"
+      : `Související výraz: ${term}`;
 
     return searchTargets
     .filter((target) => !filters.sourceType || target.type === filters.sourceType)
@@ -377,7 +387,8 @@ function buildGeneratedRecords(filters) {
       relevance: journalisticRelevance(target, filters),
       timeContext: timeContextFor(target, filters),
       scoreLabel: scoreLabelFor(target.priority + termWeight + personWeight + (target.group === "top" ? 20 : 0)),
-      url: target.build(query, dates)
+      directUrl: "",
+      searchUrl: target.build(query, dates)
     }));
   }))
     .sort((a, b) => {
@@ -429,7 +440,7 @@ function scoreLabelFor(score) {
 function timeContextFor(target, filters) {
   if (filters.dateFrom || filters.dateTo) {
     const period = describePeriod(filters);
-    return `Zdroj je zaměřený na období ${period}.`;
+    return `Zdroj pochází z období ${period}.`;
   }
 
   if (target.type === "Rozhovor") {
@@ -448,15 +459,19 @@ function topicIntroFor(filters, records) {
   const period = describePeriod(filters);
   return {
     title: topic,
-    text: `K tématu ${topic} bylo připraveno ${records.length} relevantních zdrojů v období ${period}. Níže jsou řazeny veřejně dostupné články, rozhovory, dokumenty a další zdroje bez hodnocení osob.`
+    text: `K tématu ${topic} bylo nalezeno ${records.length} veřejně dostupných zdrojů v období ${period}. Níže jsou řazeny články, rozhovory, dokumenty a další materiály vztahující se k tématu.`
   };
 }
 
 function relatedTopicsFor(filters) {
   const terms = expandSearchTerms(filters.keywords).filter((term) => term !== filters.keywords);
+  const topicKey = stripDiacritics(filters.keywords).toLowerCase();
+  const mappedTopics = topicKey.includes("capi hnizdo")
+    ? ["Andrej Babiš", "Dotace EU", "Agrofert", "střet zájmů"]
+    : [];
   const base = [filters.person, ...terms].filter(Boolean);
-  const defaults = ["související kauza", "veřejná debata", "oficiální dokumenty", "rozhovory"];
-  return uniqueTerms([...base, ...defaults]).slice(0, 8);
+  const defaults = ["veřejná debata", "oficiální dokumenty", "rozhovory"];
+  return uniqueTerms([...mappedTopics, ...base, ...defaults]).slice(0, 8);
 }
 
 function yearsFor(records) {
@@ -467,11 +482,51 @@ function yearsFor(records) {
   return years.length ? [...new Set(years)].sort((a, b) => a - b) : DEFAULT_YEARS;
 }
 
+function recordUrl(record) {
+  return record.directUrl || record.searchUrl || "#";
+}
+
+function recordLinkText(record) {
+  return record.directUrl ? "Otevřít článek" : "Otevřít záložní hledání";
+}
+
+function periodFromRecords(records) {
+  const years = records
+    .map((record) => record.date ? new Date(`${record.date}T12:00:00`).getFullYear() : null)
+    .filter(Boolean);
+
+  if (!years.length) {
+    return "všechny roky";
+  }
+
+  return `${Math.min(...years)}–${Math.max(...years)}`;
+}
+
+function statementCount(records) {
+  return records.filter((record) => record.statementQuote || record.type === "Rozhovor").length;
+}
+
+function renderPersonProfile(filters) {
+  const name = filters.person.trim();
+  const initials = name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
+  personAvatar.textContent = initials || "?";
+  personName.textContent = name;
+  personDescription.textContent = "Veřejně známá osoba uvedená v hledání.";
+  personProfile.classList.toggle("hidden", !name);
+}
+
 function excerptFor(record) {
   const excerpt = record.excerpt && record.excerpt.trim();
 
   if (!excerpt) {
-    return "AI výňatek zatím není k dispozici. Po připojení rešeršního backendu se tady zobrazí krátká pasáž, která nejlépe vystihuje zdroj.";
+    return "";
   }
 
   if (excerpt.length <= EXCERPT_LIMIT) {
@@ -494,35 +549,36 @@ function setAiStatus(message, state = "") {
 function normalizeAiRecord(record, index) {
   return {
     date: record.date || "",
-    dateLabel: record.date ? "" : "AI zdroj",
+    dateLabel: record.date ? "" : "Zdroj bez data",
     type: record.type || "Článek",
-    title: record.title || record.source || `AI zdroj ${index + 1}`,
+    title: record.title || record.source || `Zdroj ${index + 1}`,
     source: record.source || "Neznámý zdroj",
     sourceGroup: record.sourceGroup || (index < 12 ? "top" : "archive"),
     tags: record.tags || [record.type || "Článek"],
     matchedTerm: record.matchedTerm || "",
     matchType: record.matchType || "exact",
-    matchLabel: record.matchLabel || "nalezeno AI rešerší",
+    matchLabel: record.matchLabel || "Doplněno rešeršní částí",
     relevanceScore: Number(record.relevanceScore || 0),
     excerpt: record.excerpt || "",
-    relevance: record.relevance || "AI označila zdroj jako relevantní k zadané osobě, tématu a časovému kontextu.",
+    relevance: record.relevance || "Zdroj přináší informace k zadané osobě, tématu a časovému kontextu.",
     timeContext: record.timeContext || "Zdroj zachycuje téma v časovém kontextu veřejné debaty.",
     scoreLabel: record.scoreLabel || scoreLabelFor(Number(record.relevanceScore || 0)),
     statementQuote: record.statementQuote || "",
-    url: record.url || "#"
+    directUrl: record.directUrl || record.url || "",
+    searchUrl: record.searchUrl || ""
   };
 }
 
 async function fetchAiRecords(filters) {
   if (window.location.protocol === "file:") {
-    setAiStatus("AI výňatky vyžadují backend. Při otevření přes soubor se zobrazují jen zdrojové odkazy.", "is-warning");
+    setAiStatus("Rešeršní část vyžaduje server. Při otevření přes soubor se zobrazují připravené zdrojové odkazy.", "is-warning");
     return null;
   }
 
-  setAiStatus("AI rešerše hledá zdroje a krátké výňatky…", "is-loading");
+  setAiStatus("Probíhá rešerše zdrojů a krátkých výňatků…", "is-loading");
 
   try {
-    const response = await fetch(AI_RESEARCH_ENDPOINT, {
+    const response = await fetch(RESEARCH_ENDPOINT, {
       method: "POST",
       headers: {
         "Content-Type": "application/json"
@@ -534,27 +590,27 @@ async function fetchAiRecords(filters) {
         rules: {
           maxExcerptChars: EXCERPT_LIMIT,
           noFullArticles: true,
-          neutralOnly: true
+          sourceTimelineOnly: true
         }
       })
     });
 
     if (!response.ok) {
-      throw new Error(`AI backend returned ${response.status}`);
+      throw new Error(`Research endpoint returned ${response.status}`);
     }
 
     const payload = await response.json();
     const records = Array.isArray(payload.records) ? payload.records : [];
 
     if (!records.length) {
-      setAiStatus("AI backend nevrátil žádné zdroje. Zůstávají zobrazené připravené odkazy.", "is-warning");
+      setAiStatus("Rešeršní část nevrátila žádné zdroje. Zůstávají zobrazené připravené odkazy.", "is-warning");
       return null;
     }
 
-    setAiStatus(`AI doplnila ${Math.min(records.length, RESULT_LIMIT)} zdrojů s krátkými výňatky.`, "is-ready");
+    setAiStatus(`Doplněno ${Math.min(records.length, RESULT_LIMIT)} zdrojů s krátkými výňatky.`, "is-ready");
     return records.slice(0, RESULT_LIMIT).map(normalizeAiRecord);
   } catch (error) {
-    setAiStatus("AI backend zatím není připojený. Zobrazují se zdrojové odkazy připravené pro rešerši.", "is-warning");
+    setAiStatus("Rešeršní část zatím není připojená. Zobrazují se připravené zdrojové odkazy.", "is-warning");
     return null;
   }
 }
@@ -581,16 +637,21 @@ function renderQuoteCards(records) {
     card.querySelector("time").dateTime = record.date || "";
     card.querySelector("time").textContent = `${record.dateLabel || formatDate(record.date)} · ${record.source}`;
     card.querySelector("h4").textContent = record.title;
-    card.querySelector(".match-note").textContent = record.matchLabel || "nalezeno podle přesného dotazu";
+    card.querySelector(".match-note").textContent = record.matchLabel || "Přesná shoda tématu";
     card.querySelector(".score-label").textContent = record.scoreLabel || scoreLabelFor(record.relevanceScore || 0);
     card.querySelector(".time-context").textContent = record.timeContext || "Zdroj zachycuje téma v časovém kontextu veřejné debaty.";
     renderTags(card.querySelector(".tag-list"), record.tags || [record.type]);
-    card.querySelector("blockquote").textContent = excerptFor(record);
+    const excerptText = excerptFor(record);
+    const excerptLabel = card.querySelector(".excerpt-label");
+    const excerptBlock = card.querySelector("blockquote");
+    excerptBlock.textContent = excerptText;
+    excerptLabel.classList.toggle("hidden", !excerptText);
+    excerptBlock.classList.toggle("hidden", !excerptText);
     card.querySelector(".relevance").textContent = record.relevance;
 
     const link = card.querySelector("a");
-    link.href = record.url;
-    link.textContent = "Otevřít celý zdroj";
+    link.href = recordUrl(record);
+    link.textContent = recordLinkText(record);
 
     quoteCards.append(card);
   });
@@ -614,17 +675,22 @@ function renderTimeline(records) {
       item.querySelector("time").dateTime = record.date || "";
       item.querySelector("time").textContent = record.source;
       item.querySelector("h4").textContent = record.title;
-      item.querySelector(".match-note").textContent = record.matchLabel || "nalezeno podle přesného dotazu";
+      item.querySelector(".match-note").textContent = record.matchLabel || "Přesná shoda tématu";
       item.querySelector(".score-label").textContent = record.scoreLabel || scoreLabelFor(record.relevanceScore || 0);
       item.querySelector(".time-context").textContent = record.timeContext || "Zdroj zachycuje téma v časovém kontextu veřejné debaty.";
       renderTags(item.querySelector(".tag-list"), record.tags || [record.type]);
-      item.querySelector("blockquote").textContent = excerptFor(record);
+      const excerptText = excerptFor(record);
+      const excerptLabel = item.querySelector(".excerpt-label");
+      const excerptBlock = item.querySelector("blockquote");
+      excerptBlock.textContent = excerptText;
+      excerptLabel.classList.toggle("hidden", !excerptText);
+      excerptBlock.classList.toggle("hidden", !excerptText);
       item.querySelector(".source-name").textContent = record.source;
       item.querySelector(".relevance").textContent = record.relevance;
 
       const link = item.querySelector("a");
-      link.href = record.url;
-      link.textContent = "Otevřít celý zdroj";
+      link.href = recordUrl(record);
+      link.textContent = recordLinkText(record);
 
       timeline.append(item);
     });
@@ -644,6 +710,18 @@ function renderTopicIntro(filters, records) {
   const intro = topicIntroFor(filters, records);
   topicIntroTitle.textContent = intro.title;
   topicIntroText.textContent = intro.text;
+  topicStats.replaceChildren();
+
+  [
+    `${records.length} zdrojů`,
+    `${statementCount(records)} výroků v čase`,
+    periodFromRecords(records)
+  ].forEach((value) => {
+    const item = document.createElement("span");
+    item.textContent = value;
+    topicStats.append(item);
+  });
+
   topicIntro.classList.remove("hidden");
 }
 
@@ -655,7 +733,7 @@ function renderRecommended(records) {
     const link = document.createElement("a");
     const note = document.createElement("p");
 
-    link.href = record.url;
+    link.href = recordUrl(record);
     link.target = "_blank";
     link.rel = "noopener noreferrer";
     link.textContent = record.title;
@@ -738,7 +816,7 @@ function renderStatements(records) {
 function renderSummary(filters, records) {
   const period = describePeriod(filters);
   const types = records.length ? [...new Set(records.map((record) => record.type.toLowerCase()))].join(", ") : "žádné zdroje";
-  summaryText.textContent = `Přehled ukazuje veřejně dostupné zdroje k tématu "${filters.keywords}" a osobě ${filters.person} v období ${period}. Zdroje jsou seřazené podle čtenářské důležitosti; nahoře jsou hlavní články a dokumenty, níže archivní a doplňující materiály.`;
+  summaryText.textContent = `Přehled ukazuje veřejně dostupné zdroje k tématu "${filters.keywords}" a osobě ${filters.person} v období ${period}. Nahoře jsou hlavní články a dokumenty, níže archivní a doplňující materiály.`;
   summaryCard.classList.remove("hidden");
 }
 
@@ -746,6 +824,7 @@ function runSearch(filters, records = sampleRecords) {
   const filteredRecords = filterRecords(records, filters);
   resultTitle.textContent = `${filters.person}: ${filters.keywords}`;
   renderSourceLinks(filters);
+  renderPersonProfile(filters);
   renderTopicIntro(filters, filteredRecords);
   renderRecommended(filteredRecords);
   renderYearFilter(filteredRecords, filters);

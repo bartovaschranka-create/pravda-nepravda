@@ -1,12 +1,12 @@
-# Pravda-nepravda
+# Zdroje v čase
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.4.0-ai-excerpts` ze dne `2026-06-16`.
+Aktuální verze: `0.3.0-editorial-archive` ze dne `2026-06-16`.
 
 ## Cíl
 
-Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulosti a řadí je do časového kontextu se zdroji. Neurčuje absolutní pravdu a nehodnotí osobu. Ukazuje dohledatelné rozpory, souvislosti, návaznosti a odkazy na původní zdroje.
+Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulosti a řadí je do časového kontextu se zdroji. Neposuzuje osoby ani výroky. Ukazuje citace, souvislosti, návaznosti a odkazy na původní zdroje.
 
 ## Aktuální MVP
 
@@ -20,10 +20,10 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - až 30 zdrojů řazených podle relevance: nahoře TOP zdroje, níže archivní a starší zdroje,
 - funkce `expandSearchTerms(query)` pro technické rozšíření dotazu o související výrazy a varianty bez diakritiky,
 - označení, zda je výsledek podle přesného dotazu nebo podle souvisejícího výrazu,
-- karty nejdůležitějších relevantních zdrojů,
-- pole `excerpt` pro krátký výňatek přímo ze zdroje; pokud chybí, zobrazí se „Výňatek zatím není doplněn“,
+- karty hlavních zdrojů,
+- pole `excerpt` pro krátký výňatek přímo ze zdroje; pokud chybí, místo citace se nezobrazuje žádný zástupný text,
 - dlouhé výňatky se v náhledu automaticky zkrátí, aby karta ukazovala jen zásadní část a ne celý článek,
-- volitelný AI backend `/api/research`, který může automaticky dohledat zdroje a vrátit krátké výňatky do pole `excerpt`,
+- volitelná rešeršní část `/api/research`, která může automaticky dohledat zdroje a vrátit krátké výňatky do pole `excerpt`,
 - časová osa zdrojů,
 - krátké neutrální shrnutí souvislostí.
 
@@ -33,11 +33,11 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - Nezobrazovat obsah za paywallem.
 - Zobrazovat pouze krátkou relevantní citaci, název článku, médium, datum a odkaz.
 - U každého zdroje uvádět krátké vysvětlení relevance.
-- Neoznačovat osobu za lháře, manipulátora nebo podvodníka.
+- Nehodnotit osoby; zobrazovat pouze zdroje, citace a časový kontext.
 
 ## Omezení statické verze
 
-GitHub Pages bez backendu nemůže spolehlivě automaticky stahovat výsledky z médií, vyhledávačů a sociálních sítí. MVP proto generuje přesné vyhledávací dotazy a umí volitelně zavolat `/api/research`. Tento backend má dohledat zdroje, stáhnout text jen pro analýzu, vybrat krátký výňatek a vrátit ho jako `excerpt`.
+GitHub Pages bez backendu nemůže spolehlivě automaticky stahovat výsledky z médií, vyhledávačů a sociálních sítí. MVP proto generuje přesné vyhledávací dotazy a umí volitelně zavolat `/api/research`. Tato rešeršní část má dohledat zdroje, stáhnout text jen pro zpracování, vybrat krátký výňatek a vrátit ho jako `excerpt`.
 
 Kontrakt endpointu je v `api-research-contract.json`.
 

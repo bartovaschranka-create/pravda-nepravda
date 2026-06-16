@@ -16,7 +16,7 @@
     "rules": {
       "maxExcerptChars": 260,
       "noFullArticles": true,
-      "neutralOnly": true
+          "sourceTimelineOnly": true
     }
   },
   "response": {
@@ -26,7 +26,8 @@
         "source": "Médium",
         "date": "2024-01-15",
         "type": "Článek",
-        "url": "https://example.com/clanek",
+        "directUrl": "https://example.com/clanek",
+        "searchUrl": "https://www.google.com/search?q=...",
         "excerpt": "Krátký výňatek přímo ze zdroje, maximálně několik vět.",
         "relevance": "Proč je zdroj relevantní k osobě, tématu a časovému kontextu.",
         "matchedTerm": "drogy",

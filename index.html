@@ -3,9 +3,9 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Pravda-nepravda: dohledatelné veřejné výroky, citace a zdroje v časovém kontextu.">
-    <meta name="app-version" content="0.4.0-ai-excerpts">
-    <title>Pravda-nepravda</title>
+    <meta name="description" content="Archiv výroků: dohledatelné veřejné výroky, citace a zdroje v časovém kontextu.">
+    <meta name="app-version" content="0.3.0-editorial-archive">
+    <title>Archiv výroků</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,19 +21,14 @@
             <span></span>
           </div>
           <div>
-            <h1 id="app-title">Pravda-nepravda</h1>
-            <p>Veřejné výroky, zdroje a souvislosti dohledatelné napříč dostupným webem.</p>
+            <h1 id="app-title">Archiv výroků</h1>
+            <p>Veřejné citace, rozhovory, články a dokumenty v časové souvislosti.</p>
           </div>
-        </div>
-
-        <div class="version-badge" aria-label="Verze aplikace">
-          Verze 0.4.0 · AI výňatky · 2026-06-16
         </div>
 
         <div class="notice">
           <strong>Upozornění:</strong>
-          Aplikace neurčuje absolutní pravdu. Ukazuje dohledatelné rozpory, souvislosti, časovou posloupnost a odkazy na původní zdroje.
-          Rozšíření hledaných výrazů je pouze technická pomůcka pro dohledání starších zdrojů.
+          Aplikace nic neposuzuje. Ukazuje zdroje, citace, souvislosti, časovou posloupnost a odkazy na původní materiály.
         </div>
 
         <form id="search-form" class="search-form">
@@ -73,13 +68,13 @@
 
           <button type="submit">
             <span aria-hidden="true">⌕</span>
-            Vyhledat s AI
+            Vyhledat
           </button>
         </form>
 
-        <div class="source-box" aria-label="Zdroje vyhledávání">
-          <h2>Vyhledávání</h2>
-          <p>Odkazy kombinují osobu, citaci, téma, období, médium a typ zdroje. Upřednostněná jsou běžná média, veřejné databáze, instituce a seriózní investigativní zdroje.</p>
+        <div class="source-box" aria-label="Záložní odkazy">
+          <h2>Záložní odkazy</h2>
+          <p>Pokud u záznamu není přímý odkaz, zobrazí se odkaz na hledání ve vybraném zdroji.</p>
           <div id="source-links" class="source-links"></div>
         </div>
 
@@ -91,12 +86,16 @@
             <li>Nehodnotit osobu, pouze porovnávat výroky a kontext.</li>
           </ul>
         </div>
+
+        <div class="version-badge" aria-label="Verze aplikace">
+          verze 0.3.0
+        </div>
       </section>
 
       <section class="results-panel" aria-live="polite">
         <div class="toolbar">
           <div>
-            <p class="eyebrow">MVP dohledávání zdrojů</p>
+            <p class="eyebrow">Redakční archiv</p>
             <h2 id="result-title">Zadejte osobu, výrok a téma</h2>
           </div>
           <div class="view-actions">
@@ -105,6 +104,15 @@
           </div>
         </div>
 
+        <section id="person-profile" class="person-profile hidden" aria-label="Hledaná osoba">
+          <div id="person-avatar" class="person-avatar"></div>
+          <div>
+            <p class="eyebrow">Hledaná osoba</p>
+            <h3 id="person-name"></h3>
+            <p id="person-description"></p>
+          </div>
+        </section>
+
         <div id="empty-state" class="empty-state">
           <div class="empty-visual" aria-hidden="true">
             <span></span>
@@ -112,12 +120,12 @@
             <span></span>
             <span></span>
           </div>
-          <p>Statická verze pro GitHub Pages nemůže sama stahovat výsledky z médií a sociálních sítí. Po vyhledání proto zobrazí konkrétní odkazy na důvěryhodné veřejné zdroje a šablonu výsledků: krátká citace, datum, médium, relevance a odkaz na původní článek.</p>
+          <p>Po vyhledání se zobrazí přehled zdrojů, citací, článků, rozhovorů a dokumentů k tématu. Pokud není k dispozici přímý odkaz, aplikace nabídne záložní odkaz na hledání ve zdroji.</p>
         </div>
 
         <section id="summary-card" class="summary-card hidden" aria-labelledby="summary-title">
           <p class="eyebrow">Neutrální shrnutí</p>
-          <h3 id="summary-title">Souvislosti a možné rozpory</h3>
+          <h3 id="summary-title">Souvislosti v čase</h3>
           <p id="summary-text"></p>
         </section>
 
@@ -126,6 +134,7 @@
         <section id="topic-intro" class="topic-intro hidden" aria-labelledby="topic-intro-title">
           <p class="eyebrow">Úvod k tématu</p>
           <h3 id="topic-intro-title"></h3>
+          <div id="topic-stats" class="topic-stats"></div>
           <p id="topic-intro-text"></p>
         </section>
 
@@ -137,33 +146,9 @@
           <ol id="recommended-list" class="recommended-list"></ol>
         </section>
 
-        <section id="year-section" class="year-section hidden" aria-labelledby="year-title">
-          <div class="section-head">
-            <p class="eyebrow">Časová osa</p>
-            <h3 id="year-title">Filtrovat podle roku</h3>
-          </div>
-          <div id="year-filter" class="year-filter"></div>
-        </section>
-
-        <section id="related-section" class="related-section hidden" aria-labelledby="related-title">
-          <div class="section-head">
-            <p class="eyebrow">Související témata</p>
-            <h3 id="related-title">Navazující hledání</h3>
-          </div>
-          <div id="related-topics" class="related-topics"></div>
-        </section>
-
-        <section id="statements-section" class="statements-section hidden" aria-labelledby="statements-title">
-          <div class="section-head">
-            <p class="eyebrow">Výroky v čase</p>
-            <h3 id="statements-title">Chronologie citací</h3>
-          </div>
-          <div id="statements-list" class="statements-list"></div>
-        </section>
-
         <section id="quote-cards-section" class="quote-cards-section hidden" aria-labelledby="quote-cards-title">
           <div class="section-head">
-            <p class="eyebrow">TOP zdroje</p>
+            <p class="eyebrow">Nejrelevantnější</p>
             <h3 id="quote-cards-title">Až 30 zdrojů podle relevance</h3>
             <p class="section-note">Nahoře jsou prioritní zdroje, níže archivní a starší odkazy. Každá karta ukazuje krátký zkrácený výňatek, pokud je k dispozici.</p>
           </div>
@@ -178,6 +163,32 @@
           <div id="timeline" class="timeline" aria-label="Časová osa"></div>
         </section>
       </section>
+
+      <aside class="context-panel" aria-label="Časový a tematický kontext">
+        <section id="year-section" class="year-section hidden" aria-labelledby="year-title">
+          <div class="section-head">
+            <p class="eyebrow">Časová osa</p>
+            <h3 id="year-title">Filtrovat podle roku</h3>
+          </div>
+          <div id="year-filter" class="year-filter"></div>
+        </section>
+
+        <section id="statements-section" class="statements-section hidden" aria-labelledby="statements-title">
+          <div class="section-head">
+            <p class="eyebrow">Výroky v čase</p>
+            <h3 id="statements-title">Chronologie citací</h3>
+          </div>
+          <div id="statements-list" class="statements-list"></div>
+        </section>
+
+        <section id="related-section" class="related-section hidden" aria-labelledby="related-title">
+          <div class="section-head">
+            <p class="eyebrow">Související témata</p>
+            <h3 id="related-title">Navazující hledání</h3>
+          </div>
+          <div id="related-topics" class="related-topics"></div>
+        </section>
+      </aside>
     </main>
 
     <template id="quote-card-template">
