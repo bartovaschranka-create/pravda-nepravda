@@ -23,45 +23,45 @@ const sampleRecords = [
   {
     date: "2014-03-04",
     type: "Rozhovor",
-    title: "Ukázkový archivní rozhovor k tématu",
+    title: "Archivní rozhovor k tématu",
     source: "Mediální archiv",
-    quote: "Krátká ukázková citace z rozhovoru, která se vztahuje k zadanému tématu.",
-    relevance: "Zdroj je relevantní, protože obsahuje přímé vyjádření osoby v dřívějším období.",
+    excerpt: "",
+    relevance: "Zdroj je relevantní, protože může obsahovat přímé vyjádření osoby v dřívějším období.",
     url: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+rozhovor+2014"
   },
   {
     date: "2018-09-18",
     type: "Článek",
-    title: "Ukázkový článek s kontextem k veřejnému výroku",
+    title: "Článek s kontextem k veřejnému výroku",
     source: "Zpravodajský web",
-    quote: "Krátký výňatek článku popisující okolnosti a veřejně dohledatelný kontext.",
-    relevance: "Článek doplňuje časovou osu a pomáhá porovnat pozdější vyjádření s předchozím kontextem.",
+    excerpt: "",
+    relevance: "Článek může doplnit časovou osu a pomoci porovnat pozdější vyjádření s předchozím kontextem.",
     url: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+2018"
   },
   {
     date: "2022-04-15",
     type: "Tisková zpráva",
-    title: "Ukázková tisková zpráva veřejné instituce",
+    title: "Tisková zpráva veřejné instituce",
     source: "Veřejná databáze",
-    quote: "Krátká citace z oficiálního sdělení nebo tiskové zprávy.",
+    excerpt: "",
     relevance: "Oficiální záznam může potvrdit datum, instituci a rámec události bez hodnocení osoby.",
     url: "https://www.google.com/search?q=obil%C3%AD+Ukrajina+tiskov%C3%A1+zpr%C3%A1va+2022"
   },
   {
     date: "2023-09-21",
     type: "Sociální síť",
-    title: "Ukázkový veřejný příspěvek na sociální síti",
+    title: "Veřejný příspěvek na sociální síti",
     source: "X / Facebook / veřejný profil",
-    quote: "Krátká citace z veřejného příspěvku, pokud je dohledatelný a ověřitelný.",
+    excerpt: "",
     relevance: "Veřejný profil může být relevantní tam, kde osoba vyjádřila postoj mimo tradiční média.",
     url: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+site%3Ax.com+OR+site%3Afacebook.com"
   },
   {
     date: "2024-08-05",
     type: "Investigativní web",
-    title: "Ukázková investigativní analýza související s tématem",
+    title: "Investigativní analýza související s tématem",
     source: "Investigativní web",
-    quote: "Krátký výňatek, který uvádí dohledatelnou souvislost nebo navazující informaci.",
+    excerpt: "",
     relevance: "Investigativní zdroj může upozornit na časovou návaznost, dokumenty nebo veřejně dostupná data.",
     url: "https://www.google.com/search?q=%22Andrej+Babi%C5%A1%22+obil%C3%AD+Ukrajina+investigace"
   }
@@ -136,8 +136,8 @@ function formatDate(dateValue) {
 function buildQueryParts(filters) {
   const parts = [filters.person, filters.keywords];
 
-  if (filters.quote) {
-    parts.splice(1, 0, `"${filters.quote}"`);
+  if (filters.exactQuote) {
+    parts.splice(1, 0, `"${filters.exactQuote}"`);
   }
 
   if (filters.source) {
@@ -171,7 +171,7 @@ function describePeriod(filters) {
 function collectFilters() {
   return {
     person: personInput.value.trim(),
-    quote: quoteInput.value.trim(),
+    exactQuote: quoteInput.value.trim(),
     keywords: keywordsInput.value.trim(),
     dateFrom: dateFromInput.value,
     dateTo: dateToInput.value,
@@ -209,12 +209,16 @@ function buildGeneratedRecords(filters) {
       date: "",
       dateLabel: "všechny roky",
       type: target.type,
-      title: `Vyhledat ve zdroji: ${target.label}`,
+      title: target.label,
       source: target.label,
-      quote: `Dotaz: "${queryText}". Po otevření zdroje zobrazte v aplikaci jen krátkou relevantní citaci, ne celý článek.`,
+      excerpt: "",
       relevance: `Tento zdroj je relevantní pro ověření veřejně dohledatelných výroků a kontextu k tématu "${filters.keywords}" v období ${period}, bez použití bulvárních nebo dezinformačních webů.`,
       url: target.build(query, dates)
     }));
+}
+
+function excerptFor(record) {
+  return record.excerpt && record.excerpt.trim() ? record.excerpt.trim() : "Výňatek zatím není doplněn";
 }
 
 function filterRecords(records, filters) {
@@ -239,12 +243,12 @@ function renderQuoteCards(records) {
     card.querySelector("time").dateTime = record.date || "";
     card.querySelector("time").textContent = `${record.dateLabel || formatDate(record.date)} · ${record.source}`;
     card.querySelector("h4").textContent = record.title;
-    card.querySelector("blockquote").textContent = record.quote;
+    card.querySelector("blockquote").textContent = excerptFor(record);
     card.querySelector(".relevance").textContent = record.relevance;
 
     const link = card.querySelector("a");
     link.href = record.url;
-    link.textContent = "Otevřít zdroj";
+    link.textContent = "Otevřít celý zdroj";
 
     quoteCards.append(card);
   });
@@ -265,13 +269,13 @@ function renderTimeline(records) {
       item.querySelector("time").dateTime = record.date || "";
       item.querySelector("time").textContent = record.source;
       item.querySelector("h4").textContent = record.title;
-      item.querySelector("blockquote").textContent = record.quote;
+      item.querySelector("blockquote").textContent = excerptFor(record);
       item.querySelector(".source-name").textContent = record.source;
       item.querySelector(".relevance").textContent = record.relevance;
 
       const link = item.querySelector("a");
       link.href = record.url;
-      link.textContent = "Otevřít zdroj";
+      link.textContent = "Otevřít celý zdroj";
 
       timeline.append(item);
     });
@@ -327,7 +331,7 @@ clearButton.addEventListener("click", () => {
   emptyState.classList.remove("hidden");
   renderSourceLinks({
     person: "Veřejná osoba",
-    quote: "",
+    exactQuote: "",
     keywords: "klíčová slova",
     dateFrom: "",
     dateTo: "",
@@ -338,7 +342,7 @@ clearButton.addEventListener("click", () => {
 
 renderSourceLinks({
   person: "Veřejná osoba",
-  quote: "",
+  exactQuote: "",
   keywords: "klíčová slova",
   dateFrom: "",
   dateTo: "",

@@ -16,6 +16,7 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - typ zdroje: rozhovor, článek, tisková zpráva, sociální síť, investigativní web,
 - odkazy pro vyhledávání v médiích, veřejných databázích, rozhovorech, tiskových zprávách, sociálních sítích a investigativních webech,
 - karty nejdůležitějších relevantních citací,
+- pole `excerpt` pro krátký výňatek přímo ze zdroje; pokud chybí, zobrazí se „Výňatek zatím není doplněn“,
 - časová osa zdrojů,
 - krátké neutrální shrnutí souvislostí.
 
