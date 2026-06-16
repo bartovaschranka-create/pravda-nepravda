@@ -557,7 +557,7 @@ function normalizeAiRecord(record, index) {
     tags: record.tags || [record.type || "Článek"],
     matchedTerm: record.matchedTerm || "",
     matchType: record.matchType || "exact",
-    matchLabel: record.matchLabel || "Doplněno rešeršní částí",
+    matchLabel: record.matchLabel || "Doplněno ze zdroje",
     relevanceScore: Number(record.relevanceScore || 0),
     excerpt: record.excerpt || "",
     relevance: record.relevance || "Zdroj přináší informace k zadané osobě, tématu a časovému kontextu.",
@@ -571,11 +571,11 @@ function normalizeAiRecord(record, index) {
 
 async function fetchAiRecords(filters) {
   if (window.location.protocol === "file:") {
-    setAiStatus("Rešeršní část vyžaduje server. Při otevření přes soubor se zobrazují připravené zdrojové odkazy.", "is-warning");
+    setAiStatus("Zatím zobrazujeme připravené odkazy na zdroje. Krátké citace se doplní, jakmile budou u zdrojů dostupné.", "is-warning");
     return null;
   }
 
-  setAiStatus("Probíhá rešerše zdrojů a krátkých výňatků…", "is-loading");
+  setAiStatus("Hledáme zdroje a krátké výňatky k tématu…", "is-loading");
 
   try {
     const response = await fetch(RESEARCH_ENDPOINT, {
@@ -603,14 +603,14 @@ async function fetchAiRecords(filters) {
     const records = Array.isArray(payload.records) ? payload.records : [];
 
     if (!records.length) {
-      setAiStatus("Rešeršní část nevrátila žádné zdroje. Zůstávají zobrazené připravené odkazy.", "is-warning");
+      setAiStatus("Zatím se nepodařilo doplnit konkrétní citace. Zůstávají zobrazené odkazy na zdroje.", "is-warning");
       return null;
     }
 
     setAiStatus(`Doplněno ${Math.min(records.length, RESULT_LIMIT)} zdrojů s krátkými výňatky.`, "is-ready");
     return records.slice(0, RESULT_LIMIT).map(normalizeAiRecord);
   } catch (error) {
-    setAiStatus("Rešeršní část zatím není připojená. Zobrazují se připravené zdrojové odkazy.", "is-warning");
+    setAiStatus("Zatím zobrazujeme připravené odkazy na zdroje. Krátké citace se doplní, jakmile budou k dispozici.", "is-warning");
     return null;
   }
 }

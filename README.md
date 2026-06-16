@@ -23,7 +23,7 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - karty hlavních zdrojů,
 - pole `excerpt` pro krátký výňatek přímo ze zdroje; pokud chybí, místo citace se nezobrazuje žádný zástupný text,
 - dlouhé výňatky se v náhledu automaticky zkrátí, aby karta ukazovala jen zásadní část a ne celý článek,
-- volitelná rešeršní část `/api/research`, která může automaticky dohledat zdroje a vrátit krátké výňatky do pole `excerpt`,
+- volitelné napojení `/api/research`, které může automaticky dohledat zdroje a vrátit krátké výňatky do pole `excerpt`,
 - časová osa zdrojů,
 - krátké neutrální shrnutí souvislostí.
 
@@ -37,9 +37,19 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 
 ## Omezení statické verze
 
-GitHub Pages bez backendu nemůže spolehlivě automaticky stahovat výsledky z médií, vyhledávačů a sociálních sítí. MVP proto generuje přesné vyhledávací dotazy a umí volitelně zavolat `/api/research`. Tato rešeršní část má dohledat zdroje, stáhnout text jen pro zpracování, vybrat krátký výňatek a vrátit ho jako `excerpt`.
+GitHub Pages bez serverové části nemůže spolehlivě automaticky stahovat výsledky z médií, vyhledávačů a sociálních sítí. MVP proto generuje přesné vyhledávací dotazy a umí volitelně zavolat `/api/research`. Toto napojení má dohledat zdroje, zpracovat text, vybrat krátký výňatek a vrátit ho jako `excerpt`.
 
 Kontrakt endpointu je v `api-research-contract.json`.
+
+## Výtahy z článků
+
+Skutečné výtahy z článků zajišťuje endpoint `api/research.js`. Je připravený pro Vercel nebo jiné Node serverless prostředí a používá Brave Search API.
+
+Potřebná proměnná prostředí:
+
+- `BRAVE_SEARCH_API_KEY`
+
+Po nasazení serverové části frontend automaticky zavolá `/api/research` a karty se doplní o krátké `excerpt` přímo ze zdrojů.
 
 ## Spuštění
 
