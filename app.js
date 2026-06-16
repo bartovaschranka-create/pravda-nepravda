@@ -39,8 +39,13 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
+let currentRecords = [];
 
 const TERM_EXPANSIONS = [
+  {
+    triggers: ["digitalizace", "digitalizaci", "digitalizaci stavebniho rizeni", "dsr", "portal stavebnika"],
+    terms: ["digitalizace stavebního řízení", "stavební řízení", "Portál stavebníka", "DSŘ", "MMR", "Ministerstvo pro místní rozvoj"]
+  },
   {
     triggers: ["rom", "romove", "romsky", "romska"],
     terms: ["Romové", "romský", "romská menšina", "Cikán", "Cikáni"]
@@ -49,6 +54,20 @@ const TERM_EXPANSIONS = [
     triggers: ["migrant", "migranti", "migrace"],
     terms: ["migrace", "uprchlík", "uprchlíci", "azylant", "azylanti"]
   }
+];
+
+const SPELLING_TERMS = [
+  "digitalizace",
+  "digitalizaci",
+  "stavební",
+  "řízení",
+  "portál",
+  "stavebníka",
+  "migrace",
+  "uprchlík",
+  "azylant",
+  "romové",
+  "romský"
 ];
 
 const sampleRecords = [
@@ -263,10 +282,45 @@ function uniqueTerms(terms) {
   });
 }
 
+function levenshtein(a, b) {
+  const matrix = Array.from({ length: a.length + 1 }, () => []);
+
+  for (let i = 0; i <= a.length; i += 1) matrix[i][0] = i;
+  for (let j = 0; j <= b.length; j += 1) matrix[0][j] = j;
+
+  for (let i = 1; i <= a.length; i += 1) {
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      matrix[i][j] = Math.min(
+        matrix[i - 1][j] + 1,
+        matrix[i][j - 1] + 1,
+        matrix[i - 1][j - 1] + cost
+      );
+    }
+  }
+
+  return matrix[a.length][b.length];
+}
+
+function spellingVariants(query) {
+  return query.split(/\s+/).flatMap((part) => {
+    const clean = stripDiacritics(part).toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+
+    if (clean.length < 5) {
+      return [];
+    }
+
+    return SPELLING_TERMS.filter((term) => {
+      const normalizedTerm = stripDiacritics(term).toLowerCase();
+      return levenshtein(clean, normalizedTerm) <= 2;
+    });
+  });
+}
+
 function expandSearchTerms(query) {
   const original = query.trim();
   const normalized = stripDiacritics(original).toLowerCase();
-  const terms = [original];
+  const terms = [original, ...spellingVariants(original)];
 
   TERM_EXPANSIONS.forEach((entry) => {
     if (entry.triggers.some((trigger) => normalized.includes(trigger))) {
@@ -442,6 +496,15 @@ function journalisticRelevance(target, filters) {
 function sourceBriefFor(target, filters) {
   const person = filters.person || "sledovaná osoba";
   const topic = filters.keywords || "téma";
+  const topicKey = stripDiacritics(topic).toLowerCase();
+
+  if (topicKey.includes("digitaliz") || topicKey.includes("staveb") || topicKey.includes("dsr")) {
+    return [
+      `Souvislost s osobou ${person} se typicky týká digitalizace stavebního řízení, Portálu stavebníka a agendy ministerstva pro místní rozvoj.`,
+      "V článcích hledejte, kdy se systém spouštěl, jaké problémy se popisovaly a kdo na ně veřejně reagoval.",
+      "Užitečné jsou hlavně citace úřadů, obcí, stavebníků, ministerstva a politických aktérů."
+    ];
+  }
 
   if (target.label === "iROZHLAS") {
     return [
@@ -672,7 +735,7 @@ function normalizeAiRecord(record, index) {
 
 async function fetchAiRecords(filters) {
   if (window.location.protocol === "file:") {
-    setAiStatus("Zatím zobrazujeme připravené odkazy na zdroje. Krátké citace se doplní, jakmile budou u zdrojů dostupné.", "is-warning");
+    setAiStatus("Teď běží jen statická stránka. Pro automatické čtení článků a doplnění citací je potřeba spustit serverovou část /api/research.", "is-warning");
     return null;
   }
 
@@ -711,7 +774,7 @@ async function fetchAiRecords(filters) {
     setAiStatus(`Doplněno ${Math.min(records.length, RESULT_LIMIT)} zdrojů s krátkými výňatky.`, "is-ready");
     return records.slice(0, RESULT_LIMIT).map(normalizeAiRecord);
   } catch (error) {
-    setAiStatus("Zatím zobrazujeme připravené odkazy na zdroje. Krátké citace se doplní, jakmile budou k dispozici.", "is-warning");
+    setAiStatus("Automatické čtení článků zatím není dostupné. Zobrazují se rozšířené odkazy a redakční vodítka, citace doplní serverová část /api/research.", "is-warning");
     return null;
   }
 }
@@ -812,6 +875,10 @@ function renderTags(container, tags) {
 }
 
 function renderSourceBrief(container, record) {
+  if (!container) {
+    return;
+  }
+
   container.replaceChildren();
   const points = Array.isArray(record.sourceBrief) ? record.sourceBrief.filter(Boolean).slice(0, 3) : [];
 
@@ -824,7 +891,7 @@ function renderSourceBrief(container, record) {
 
   const title = document.createElement("strong");
   const list = document.createElement("ul");
-  title.textContent = "Co z toho číst";
+  title.textContent = "Co se dozvíte";
 
   points.forEach((point) => {
     const item = document.createElement("li");
@@ -950,6 +1017,7 @@ function renderSummary(filters, records) {
 }
 
 function runSearch(filters, records = sampleRecords) {
+  currentRecords = records;
   const filteredRecords = filterRecords(records, filters);
   resultTitle.textContent = `${filters.person}: ${filters.keywords}`;
   renderSourceLinks(filters);
@@ -974,7 +1042,7 @@ yearFilter.addEventListener("click", (event) => {
   const year = button.dataset.year;
   dateFromInput.value = `${year}-01-01`;
   dateToInput.value = `${year}-12-31`;
-  runSearch(collectFilters(), buildGeneratedRecords(collectFilters()));
+  runSearch(collectFilters(), currentRecords.length ? currentRecords : buildGeneratedRecords(collectFilters()));
 });
 
 relatedTopics.addEventListener("click", (event) => {
@@ -1019,6 +1087,7 @@ clearButton.addEventListener("click", () => {
   sourceLinks.replaceChildren();
   timeline.replaceChildren();
   quoteCards.replaceChildren();
+  currentRecords = [];
   resultTitle.textContent = "Zadejte osobu, výrok a téma";
   summaryCard.classList.add("hidden");
   topicIntro.classList.add("hidden");

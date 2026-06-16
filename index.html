@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Archiv výroků: dohledatelné veřejné výroky, citace a zdroje v časovém kontextu.">
-    <meta name="app-version" content="0.3.0-editorial-archive">
+    <meta name="app-version" content="0.3.1-editorial-timeline">
     <title>Archiv výroků</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -88,7 +88,7 @@
         </div>
 
         <div class="version-badge" aria-label="Verze aplikace">
-          verze 0.3.0
+          verze 0.3.1
         </div>
       </section>
 
@@ -138,6 +138,14 @@
           <p id="topic-intro-text"></p>
         </section>
 
+        <section id="year-section" class="year-section timeline-strip hidden" aria-labelledby="year-title">
+          <div class="section-head">
+            <p class="eyebrow">Časová osa</p>
+            <h3 id="year-title">Filtrovat podle roku</h3>
+          </div>
+          <div id="year-filter" class="year-filter"></div>
+        </section>
+
         <section id="recommended-section" class="recommended-section hidden" aria-labelledby="recommended-title">
           <div class="section-head">
             <p class="eyebrow">Co stojí za přečtení</p>
@@ -150,7 +158,7 @@
           <div class="section-head">
             <p class="eyebrow">Nejrelevantnější</p>
             <h3 id="quote-cards-title">Až 30 zdrojů podle relevance</h3>
-            <p class="section-note">Nahoře jsou prioritní zdroje, níže archivní a starší odkazy. Každá karta ukazuje krátký zkrácený výňatek, pokud je k dispozici.</p>
+            <p class="section-note">Nahoře jsou prioritní zdroje, níže archivní a starší odkazy. Pokud je k dispozici konkrétní výrok nebo citace ze zdroje, je na kartě nejvýraznější.</p>
           </div>
           <div id="quote-cards" class="quote-cards"></div>
         </section>
@@ -165,14 +173,6 @@
       </section>
 
       <aside class="context-panel" aria-label="Časový a tematický kontext">
-        <section id="year-section" class="year-section hidden" aria-labelledby="year-title">
-          <div class="section-head">
-            <p class="eyebrow">Časová osa</p>
-            <h3 id="year-title">Filtrovat podle roku</h3>
-          </div>
-          <div id="year-filter" class="year-filter"></div>
-        </section>
-
         <section id="statements-section" class="statements-section hidden" aria-labelledby="statements-title">
           <div class="section-head">
             <p class="eyebrow">Výroky v čase</p>
@@ -202,6 +202,7 @@
         <p class="score-label"></p>
         <p class="time-context"></p>
         <div class="tag-list"></div>
+        <div class="source-brief"></div>
         <p class="excerpt-label"></p>
         <blockquote></blockquote>
         <p class="relevance"></p>
@@ -222,6 +223,7 @@
           <p class="score-label"></p>
           <p class="time-context"></p>
           <div class="tag-list"></div>
+          <div class="source-brief"></div>
           <p class="excerpt-label"></p>
           <blockquote></blockquote>
           <dl class="source-detail">

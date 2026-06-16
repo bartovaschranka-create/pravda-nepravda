@@ -1,5 +1,5 @@
 :root {
-  --bg: #f5f6f7;
+  --bg: #eef2f4;
   --panel: #ffffff;
   --ink: #132238;
   --muted: #607080;
@@ -11,6 +11,9 @@
   --paper: #ffffff;
   --warning: #fff7ed;
   --shadow: 0 18px 60px rgba(29, 39, 51, 0.12);
+  --navy: #0f2538;
+  --navy-2: #17334a;
+  --newsprint: #fbfaf7;
 }
 
 * {
@@ -21,8 +24,8 @@ body {
   margin: 0;
   min-height: 100vh;
   background:
-    linear-gradient(90deg, rgba(15, 95, 100, 0.06), transparent 34rem),
-    linear-gradient(135deg, #ffffff 0%, var(--bg) 100%);
+    linear-gradient(90deg, rgba(15, 37, 56, 0.08), transparent 31rem),
+    linear-gradient(180deg, #ffffff 0%, var(--bg) 100%);
   color: var(--ink);
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
@@ -36,10 +39,10 @@ select {
 
 .app-shell {
   display: grid;
-  grid-template-columns: minmax(18rem, 25rem) minmax(0, 1fr) minmax(17rem, 23rem);
-  gap: 1.25rem;
+  grid-template-columns: minmax(18rem, 24rem) minmax(0, 1fr) minmax(16rem, 22rem);
+  gap: 1rem;
   min-height: 100vh;
-  padding: 1.25rem;
+  padding: 1rem;
 }
 
 .search-panel,
@@ -57,13 +60,17 @@ select {
   gap: 1rem;
   padding: 1.25rem;
   position: sticky;
-  top: 1.25rem;
-  min-height: calc(100vh - 2.5rem);
+  top: 1rem;
+  min-height: calc(100vh - 2rem);
+  border-color: rgba(255, 255, 255, 0.12);
+  background: linear-gradient(180deg, var(--navy) 0%, #102a43 68%, #0c1f30 100%);
+  color: #f8fafc;
 }
 
 .results-panel {
   min-width: 0;
-  padding: 1.5rem;
+  padding: 1.25rem;
+  background: rgba(255, 255, 255, 0.98);
 }
 
 .context-panel {
@@ -72,7 +79,8 @@ select {
   gap: 1rem;
   padding: 1rem;
   position: sticky;
-  top: 1.25rem;
+  top: 1rem;
+  background: rgba(251, 250, 247, 0.96);
 }
 
 .brand-row {
@@ -89,7 +97,8 @@ select {
   width: 3.5rem;
   height: 3.5rem;
   border-radius: 8px;
-  background: #102a43;
+  background: #081826;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
 }
 
 .brand-mark span {
@@ -146,11 +155,24 @@ h4 {
   color: var(--muted);
 }
 
+.search-panel .brand-row p,
+.search-panel .source-box,
+.search-panel .principles li,
+.search-panel .field-help {
+  color: #cbd5e1;
+}
+
+.search-panel label,
+.search-panel .source-box h2,
+.search-panel .principles h2 {
+  color: #f8fafc;
+}
+
 .notice {
-  border: 1px solid #fed7aa;
+  border: 1px solid rgba(247, 201, 72, 0.35);
   border-radius: 8px;
-  background: var(--warning);
-  color: #7c2d12;
+  background: rgba(255, 247, 237, 0.1);
+  color: #ffedd5;
   padding: 0.85rem;
   line-height: 1.45;
 }
@@ -159,8 +181,8 @@ h4 {
   width: max-content;
   max-width: 100%;
   margin-top: auto;
-  border-top: 1px solid var(--line);
-  color: var(--muted);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  color: #cbd5e1;
   padding-top: 0.85rem;
   font-size: 0.78rem;
   font-weight: 800;
@@ -200,6 +222,19 @@ select {
   color: var(--ink);
   padding: 0.8rem 0.85rem;
   outline: none;
+}
+
+.search-panel input,
+.search-panel textarea,
+.search-panel select {
+  border-color: rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.search-panel input::placeholder,
+.search-panel textarea::placeholder {
+  color: #94a3b8;
 }
 
 textarea {
@@ -257,6 +292,12 @@ button.secondary:hover,
   background: var(--paper);
 }
 
+.search-panel .source-box,
+.search-panel .principles {
+  border-color: rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
+}
+
 .source-box,
 .principles,
 .summary-card {
@@ -300,12 +341,14 @@ button.secondary:hover,
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 1rem;
 }
 
 .toolbar h2 {
   margin-top: 0.2rem;
-  font-size: clamp(1.55rem, 2.5vw, 2.45rem);
+  font-size: clamp(1.65rem, 2.6vw, 2.65rem);
   line-height: 1.08;
 }
 
@@ -392,6 +435,21 @@ button.secondary:hover,
   border-radius: 8px;
   background: var(--paper);
   padding: 1rem;
+}
+
+.timeline-strip {
+  background: #102a43;
+  color: #ffffff;
+  border-color: #102a43;
+}
+
+.timeline-strip .eyebrow,
+.timeline-strip .section-head h3 {
+  color: #ffffff;
+}
+
+.timeline-strip .year-filter {
+  padding-top: 0.35rem;
 }
 
 .person-profile {
@@ -489,7 +547,14 @@ button.secondary:hover,
 .quote-card {
   display: grid;
   gap: 0.7rem;
-  padding: 1rem;
+  padding: 1.05rem;
+  background:
+    linear-gradient(90deg, rgba(15, 95, 100, 0.08), transparent 18rem),
+    var(--newsprint);
+}
+
+.quote-card:first-child {
+  border-top: 4px solid var(--accent);
 }
 
 .card-meta,
@@ -540,8 +605,9 @@ button.secondary:hover,
 .source-brief {
   display: grid;
   gap: 0.35rem;
-  border-left: 3px solid var(--line);
-  padding-left: 0.75rem;
+  border-left: 3px solid var(--accent);
+  background: #ffffff;
+  padding: 0.7rem 0.75rem;
   color: #334155;
   line-height: 1.45;
 }
@@ -572,12 +638,26 @@ button.secondary:hover,
   cursor: pointer;
 }
 
+.timeline-strip .year-chip {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  min-height: 2.35rem;
+}
+
 .related-chip:hover,
 .year-chip:hover,
 .year-chip.is-active {
   border-color: rgba(15, 118, 110, 0.35);
   background: rgba(15, 118, 110, 0.08);
   color: var(--accent-dark);
+}
+
+.timeline-strip .year-chip:hover,
+.timeline-strip .year-chip.is-active {
+  border-color: #f7c948;
+  background: #f7c948;
+  color: #102a43;
 }
 
 .recommended-list,
@@ -622,14 +702,15 @@ time {
 blockquote {
   margin: 0;
   color: #111827;
-  font-size: clamp(1.18rem, 2vw, 1.55rem);
+  font-size: clamp(1.25rem, 2.1vw, 1.75rem);
   font-weight: 800;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 .quote-card blockquote {
   border-left: 4px solid var(--accent);
-  padding-left: 0.8rem;
+  background: #ffffff;
+  padding: 0.75rem 0.85rem;
 }
 
 .relevance {
