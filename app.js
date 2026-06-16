@@ -18,6 +18,19 @@ const sampleButton = document.querySelector("#sample-btn");
 const clearButton = document.querySelector("#clear-btn");
 const timelineTemplate = document.querySelector("#timeline-item-template");
 const quoteCardTemplate = document.querySelector("#quote-card-template");
+const RESULT_LIMIT = 30;
+const EXCERPT_LIMIT = 260;
+
+const TERM_EXPANSIONS = [
+  {
+    triggers: ["rom", "romove", "romsky", "romska"],
+    terms: ["Romové", "romský", "romská menšina", "Cikán", "Cikáni"]
+  },
+  {
+    triggers: ["migrant", "migranti", "migrace"],
+    terms: ["migrace", "uprchlík", "uprchlíci", "azylant", "azylanti"]
+  }
+];
 
 const sampleRecords = [
   {
@@ -71,57 +84,100 @@ const searchTargets = [
   {
     label: "Běžná média",
     type: "Článek",
+    priority: 78,
+    group: "top",
     build: (query, dates) => `https://www.google.com/search?q=${query}${dates.google}`
   },
   {
     label: "iROZHLAS",
     type: "Článek",
+    priority: 96,
+    group: "top",
     build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Airozhlas.cz${dates.google}`
   },
   {
     label: "ČT24",
     type: "Článek",
+    priority: 94,
+    group: "top",
     build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Act24.ceskatelevize.cz${dates.google}`
   },
   {
     label: "ČTK / České noviny",
     type: "Článek",
+    priority: 92,
+    group: "top",
     build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Aceskenoviny.cz${dates.google}`
   },
   {
     label: "Google Zprávy",
     type: "Článek",
+    priority: 82,
+    group: "top",
     build: (query) => `https://news.google.com/search?q=${query}&hl=cs&gl=CZ&ceid=CZ%3Acs`
   },
   {
     label: "Seznam vyhledávání",
     type: "Článek",
+    priority: 70,
+    group: "top",
     build: (query) => `https://search.seznam.cz/?q=${query}`
   },
   {
     label: "Parlamentní a veřejné databáze",
     type: "Tisková zpráva",
+    priority: 90,
+    group: "top",
     build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Apsp.cz+OR+site%3Asenat.cz+OR+site%3Avlada.gov.cz${dates.google}`
   },
   {
     label: "Rozhovory a videa",
     type: "Rozhovor",
+    priority: 74,
+    group: "archive",
     build: (query, dates) => `https://www.google.com/search?q=${query}+rozhovor+OR+interview+site%3Ayoutube.com${dates.google}`
   },
   {
     label: "Tiskové zprávy",
     type: "Tisková zpráva",
+    priority: 76,
+    group: "archive",
     build: (query, dates) => `https://www.google.com/search?q=${query}+%22tiskov%C3%A1+zpr%C3%A1va%22+OR+%22press+release%22${dates.google}`
   },
   {
     label: "Sociální sítě",
     type: "Sociální síť",
+    priority: 66,
+    group: "archive",
     build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Ax.com+OR+site%3Atwitter.com+OR+site%3Afacebook.com+OR+site%3Ainstagram.com${dates.google}`
   },
   {
     label: "Investigativní a analytické zdroje",
     type: "Investigativní web",
+    priority: 86,
+    group: "top",
     build: (query, dates) => `https://www.google.com/search?q=${query}+investigace+OR+anal%C3%BDza+OR+dokumenty+site%3Ainvestigace.cz+OR+site%3Ahlidacipes.org+OR+site%3Arespekt.cz${dates.google}`
+  },
+  {
+    label: "Archiv starších článků",
+    type: "Článek",
+    priority: 58,
+    group: "archive",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+archiv+OR+star%C5%A1%C3%AD+%C4%8Dl%C3%A1nek${dates.google}`
+  },
+  {
+    label: "Starší rozhovory",
+    type: "Rozhovor",
+    priority: 56,
+    group: "archive",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+star%C5%A1%C3%AD+rozhovor+OR+archiv+rozhovor${dates.google}`
+  },
+  {
+    label: "Archiv institucí",
+    type: "Tisková zpráva",
+    priority: 54,
+    group: "archive",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+archiv+site%3Avlada.gov.cz+OR+site%3Amvcr.cz+OR+site%3Apsp.cz${dates.google}`
   }
 ];
 
@@ -135,6 +191,68 @@ function formatDate(dateValue) {
 
 function buildQueryParts(filters) {
   const parts = [filters.person, filters.keywords];
+
+  if (filters.exactQuote) {
+    parts.splice(1, 0, `"${filters.exactQuote}"`);
+  }
+
+  if (filters.source) {
+    parts.push(filters.source);
+  }
+
+  if (filters.sourceType) {
+    parts.push(filters.sourceType);
+  }
+
+  return parts.filter(Boolean).join(" ").trim();
+}
+
+function stripDiacritics(value) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function uniqueTerms(terms) {
+  const seen = new Set();
+  return terms.filter((term) => {
+    const key = stripDiacritics(term).toLowerCase().trim();
+    if (!key || seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+function expandSearchTerms(query) {
+  const original = query.trim();
+  const normalized = stripDiacritics(original).toLowerCase();
+  const terms = [original];
+
+  TERM_EXPANSIONS.forEach((entry) => {
+    if (entry.triggers.some((trigger) => normalized.includes(trigger))) {
+      terms.push(...entry.terms);
+    }
+  });
+
+  original.split(/\s+/).forEach((part) => {
+    const plain = stripDiacritics(part);
+    if (plain !== part) {
+      terms.push(plain);
+    }
+  });
+
+  const plainOriginal = stripDiacritics(original);
+  if (plainOriginal !== original) {
+    terms.push(plainOriginal);
+  }
+
+  return uniqueTerms(terms);
+}
+
+function buildSearchQuery(filters, term, person = filters.person) {
+  const parts = [person, term];
 
   if (filters.exactQuote) {
     parts.splice(1, 0, `"${filters.exactQuote}"`);
@@ -197,12 +315,22 @@ function renderSourceLinks(filters) {
 }
 
 function buildGeneratedRecords(filters) {
-  const queryText = buildQueryParts(filters);
-  const query = encodeURIComponent(queryText);
+  const searchTerms = expandSearchTerms(filters.keywords);
+  const personTerms = uniqueTerms([filters.person, stripDiacritics(filters.person)]);
   const dates = buildDateOperators(filters);
   const period = describePeriod(filters);
 
-  return searchTargets
+  return personTerms.flatMap((personTerm, personIndex) => searchTerms.flatMap((term, termIndex) => {
+    const queryText = buildSearchQuery(filters, term, personTerm);
+    const query = encodeURIComponent(queryText);
+    const isExact = termIndex === 0 && personIndex === 0;
+    const termWeight = termIndex === 0 ? 160 : Math.max(35, 70 - termIndex * 6);
+    const personWeight = personIndex === 0 ? 20 : 8;
+    const matchLabel = isExact
+      ? "nalezeno podle přesného dotazu"
+      : `nalezeno podle souvisejícího výrazu: ${queryText}`;
+
+    return searchTargets
     .filter((target) => !filters.sourceType || target.type === filters.sourceType)
     .filter((target) => !filters.source || target.label.toLowerCase().includes(filters.source.toLowerCase()))
     .map((target) => ({
@@ -211,14 +339,39 @@ function buildGeneratedRecords(filters) {
       type: target.type,
       title: target.label,
       source: target.label,
+      sourceGroup: target.group,
+      matchedTerm: term,
+      matchType: isExact ? "exact" : "related",
+      matchLabel: `${target.group === "top" ? "TOP zdroj" : "Archivní/starší zdroj"} · ${matchLabel}`,
+      relevanceScore: target.priority + termWeight + personWeight + (target.group === "top" ? 20 : 0),
       excerpt: "",
-      relevance: `Tento zdroj je relevantní pro ověření veřejně dohledatelných výroků a kontextu k tématu "${filters.keywords}" v období ${period}, bez použití bulvárních nebo dezinformačních webů.`,
+      relevance: `Tento zdroj je relevantní pro ověření veřejně dohledatelných výroků a kontextu k tématu "${filters.keywords}" v období ${period}. Rozšíření výrazu je technická pomůcka, ne hodnocení osoby nebo skupiny.`,
       url: target.build(query, dates)
     }));
+  }))
+    .sort((a, b) => {
+      const groupDiff = (a.sourceGroup === "top" ? 0 : 1) - (b.sourceGroup === "top" ? 0 : 1);
+      return groupDiff || b.relevanceScore - a.relevanceScore;
+    })
+    .slice(0, RESULT_LIMIT);
 }
 
 function excerptFor(record) {
-  return record.excerpt && record.excerpt.trim() ? record.excerpt.trim() : "Výňatek zatím není doplněn";
+  const excerpt = record.excerpt && record.excerpt.trim();
+
+  if (!excerpt) {
+    return "Výňatek zatím není doplněn";
+  }
+
+  if (excerpt.length <= EXCERPT_LIMIT) {
+    return excerpt;
+  }
+
+  const shortened = excerpt.slice(0, EXCERPT_LIMIT);
+  const lastSpace = shortened.lastIndexOf(" ");
+  const cleanCut = lastSpace > 180 ? shortened.slice(0, lastSpace) : shortened;
+
+  return `${cleanCut.trim()}…`;
 }
 
 function filterRecords(records, filters) {
@@ -237,12 +390,13 @@ function filterRecords(records, filters) {
 function renderQuoteCards(records) {
   quoteCards.replaceChildren();
 
-  records.slice(0, 4).forEach((record) => {
+  records.slice(0, RESULT_LIMIT).forEach((record) => {
     const card = quoteCardTemplate.content.cloneNode(true);
     card.querySelector(".type-badge").textContent = record.type;
     card.querySelector("time").dateTime = record.date || "";
     card.querySelector("time").textContent = `${record.dateLabel || formatDate(record.date)} · ${record.source}`;
     card.querySelector("h4").textContent = record.title;
+    card.querySelector(".match-note").textContent = record.matchLabel || "nalezeno podle přesného dotazu";
     card.querySelector("blockquote").textContent = excerptFor(record);
     card.querySelector(".relevance").textContent = record.relevance;
 
@@ -261,7 +415,10 @@ function renderTimeline(records) {
 
   records
     .slice()
-    .sort((a, b) => new Date(a.date) - new Date(b.date))
+    .sort((a, b) => {
+      const groupDiff = (a.sourceGroup === "top" ? 0 : 1) - (b.sourceGroup === "top" ? 0 : 1);
+      return groupDiff || (b.relevanceScore || 0) - (a.relevanceScore || 0);
+    })
     .forEach((record) => {
       const item = timelineTemplate.content.cloneNode(true);
       item.querySelector(".date-pill").textContent = record.dateLabel || formatDate(record.date);
@@ -269,6 +426,7 @@ function renderTimeline(records) {
       item.querySelector("time").dateTime = record.date || "";
       item.querySelector("time").textContent = record.source;
       item.querySelector("h4").textContent = record.title;
+      item.querySelector(".match-note").textContent = record.matchLabel || "nalezeno podle přesného dotazu";
       item.querySelector("blockquote").textContent = excerptFor(record);
       item.querySelector(".source-name").textContent = record.source;
       item.querySelector(".relevance").textContent = record.relevance;
@@ -284,7 +442,8 @@ function renderTimeline(records) {
 function renderSummary(filters, records) {
   const period = describePeriod(filters);
   const types = records.length ? [...new Set(records.map((record) => record.type.toLowerCase()))].join(", ") : "žádné zdroje";
-  summaryText.textContent = `Dotaz porovnává veřejné zdroje pro "${filters.person}" a téma "${filters.keywords}" v období ${period}. Zobrazené položky jsou typu ${types}. Shrnutí neurčuje, zda je výrok pravdivý; upozorňuje pouze na dohledatelné souvislosti, návaznosti, možné rozpory a nedostatek dat.`;
+  const expanded = expandSearchTerms(filters.keywords);
+  summaryText.textContent = `Dotaz porovnává veřejné zdroje pro "${filters.person}" a téma "${filters.keywords}" v období ${period}. Zobrazuje až ${RESULT_LIMIT} položek řazených podle relevance: nahoře TOP zdroje, níže archivní a starší zdroje. Použité výrazy: ${expanded.join(", ")}. Rozšíření výrazů je pouze technické a neurčuje, zda je výrok pravdivý.`;
   summaryCard.classList.remove("hidden");
 }
 
