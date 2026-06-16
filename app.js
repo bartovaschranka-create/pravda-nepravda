@@ -402,27 +402,39 @@ function journalisticRelevance(target, filters) {
   const person = filters.person || "sledovaná osoba";
   const topic = filters.keywords || "tématu";
 
+  if (target.label === "iROZHLAS") {
+    return `Texty iROZHLASu často přinášejí citace aktérů, časovou linku událostí a odkazy na související veřejné dokumenty k tématu ${topic}.`;
+  }
+
+  if (target.label === "ČT24") {
+    return `ČT24 zachycuje televizní a zpravodajský kontext: kdy se téma ${topic} dostalo do veřejné debaty a kdo na něj reagoval.`;
+  }
+
+  if (target.label === "ČTK / České noviny") {
+    return `ČTK obvykle nabízí stručný dobový záznam události, vyjádření hlavních aktérů a základní časové souvislosti.`;
+  }
+
   if (target.type === "Rozhovor") {
-    return `Rozhovor může obsahovat přímé vyjádření osoby ${person} k tématu ${topic} z daného období.`;
+    return `Rozhovory pomáhají dohledat, jak osoba ${person} o tématu ${topic} mluvila vlastními slovy v daném období.`;
   }
 
   if (target.type === "Tisková zpráva") {
-    return `Oficiální dokument přináší veřejně dostupné informace vztahující se k tématu ${topic}.`;
+    return `Oficiální dokumenty ukazují stanoviska institucí, data rozhodnutí a veřejně dostupné podklady k tématu ${topic}.`;
   }
 
   if (target.type === "Sociální síť") {
-    return `Veřejný příspěvek může zachytit bezprostřední reakci osoby ${person} nebo dalších aktérů.`;
+    return `Veřejné příspěvky zachycují rychlé reakce osoby ${person} nebo dalších aktérů mimo redakční rozhovor.`;
   }
 
   if (target.type === "Investigativní web") {
-    return `Investigativní článek může shrnovat známá fakta a souvislosti případu.`;
+    return `Investigativní materiály obvykle skládají dohromady dokumenty, časovou linku případu a vazby mezi hlavními aktéry.`;
   }
 
   if (target.group === "archive") {
-    return `Archivní zdroj ukazuje, jak se o tématu ${topic} psalo nebo mluvilo v minulosti.`;
+    return `Archivní zdroje ukazují, jak se o tématu ${topic} psalo dříve a jaké informace byly veřejně dostupné před současnou debatou.`;
   }
 
-  return `Článek zachycuje průběh tématu ${topic} a reakce hlavních aktérů.`;
+  return `Článek přináší dobový popis událostí k tématu ${topic}, včetně citací a reakcí hlavních aktérů.`;
 }
 
 function scoreLabelFor(score) {
@@ -440,18 +452,30 @@ function scoreLabelFor(score) {
 function timeContextFor(target, filters) {
   if (filters.dateFrom || filters.dateTo) {
     const period = describePeriod(filters);
-    return `Zdroj pochází z období ${period}.`;
+    return `Zaměřeno na období ${period}, takže pomáhá oddělit starší výroky od novějších reakcí.`;
   }
 
   if (target.type === "Rozhovor") {
-    return "Rozhovor může pocházet z období před současnou debatou.";
+    return "Rozhovory jsou vhodné pro srovnání dřívějších formulací s pozdějšími vyjádřeními.";
   }
 
   if (target.group === "archive") {
-    return "Archivní zdroj pomáhá zasadit téma do staršího časového kontextu.";
+    return "Archivní okruh hledá starší texty, které mohou ukázat, kdy a v jakém kontextu se téma objevovalo dříve.";
   }
 
-  return "Zdroj zachycuje téma v době veřejné debaty.";
+  if (target.type === "Tisková zpráva") {
+    return "Oficiální dokumenty pomáhají zasadit událost do data rozhodnutí, jednání nebo stanoviska instituce.";
+  }
+
+  if (target.type === "Investigativní web") {
+    return "Investigativní zdroje obvykle propojují starší události s později zveřejněnými dokumenty a reakcemi.";
+  }
+
+  if (target.type === "Sociální síť") {
+    return "Veřejné příspěvky ukazují bezprostřední reakce a formulace, které se často objevují ještě před širším mediálním zpracováním.";
+  }
+
+  return "Zpravodajské články pomáhají zachytit, kdy se téma dostalo do veřejné debaty a jak se vyvíjely reakce aktérů.";
 }
 
 function topicIntroFor(filters, records) {
@@ -561,7 +585,7 @@ function normalizeAiRecord(record, index) {
     relevanceScore: Number(record.relevanceScore || 0),
     excerpt: record.excerpt || "",
     relevance: record.relevance || "Zdroj přináší informace k zadané osobě, tématu a časovému kontextu.",
-    timeContext: record.timeContext || "Zdroj zachycuje téma v časovém kontextu veřejné debaty.",
+    timeContext: record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.",
     scoreLabel: record.scoreLabel || scoreLabelFor(Number(record.relevanceScore || 0)),
     statementQuote: record.statementQuote || "",
     directUrl: record.directUrl || record.url || "",
@@ -639,7 +663,7 @@ function renderQuoteCards(records) {
     card.querySelector("h4").textContent = record.title;
     card.querySelector(".match-note").textContent = record.matchLabel || "Přesná shoda tématu";
     card.querySelector(".score-label").textContent = record.scoreLabel || scoreLabelFor(record.relevanceScore || 0);
-    card.querySelector(".time-context").textContent = record.timeContext || "Zdroj zachycuje téma v časovém kontextu veřejné debaty.";
+    card.querySelector(".time-context").textContent = record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.";
     renderTags(card.querySelector(".tag-list"), record.tags || [record.type]);
     const excerptText = excerptFor(record);
     const excerptLabel = card.querySelector(".excerpt-label");
@@ -677,7 +701,7 @@ function renderTimeline(records) {
       item.querySelector("h4").textContent = record.title;
       item.querySelector(".match-note").textContent = record.matchLabel || "Přesná shoda tématu";
       item.querySelector(".score-label").textContent = record.scoreLabel || scoreLabelFor(record.relevanceScore || 0);
-      item.querySelector(".time-context").textContent = record.timeContext || "Zdroj zachycuje téma v časovém kontextu veřejné debaty.";
+      item.querySelector(".time-context").textContent = record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.";
       renderTags(item.querySelector(".tag-list"), record.tags || [record.type]);
       const excerptText = excerptFor(record);
       const excerptLabel = item.querySelector(".excerpt-label");
