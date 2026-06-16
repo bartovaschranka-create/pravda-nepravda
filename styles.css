@@ -142,6 +142,18 @@ h4 {
   line-height: 1.45;
 }
 
+.version-badge {
+  width: max-content;
+  max-width: 100%;
+  border: 1px solid rgba(15, 118, 110, 0.28);
+  border-radius: 999px;
+  background: rgba(15, 118, 110, 0.08);
+  color: var(--accent-dark);
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .search-form {
   display: grid;
   gap: 0.55rem;

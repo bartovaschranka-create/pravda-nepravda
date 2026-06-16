@@ -2,6 +2,8 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
+Aktuální verze: `0.4.0-ai-excerpts` ze dne `2026-06-16`.
+
 ## Cíl
 
 Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulosti a řadí je do časového kontextu se zdroji. Neurčuje absolutní pravdu a nehodnotí osobu. Ukazuje dohledatelné rozpory, souvislosti, návaznosti a odkazy na původní zdroje.
