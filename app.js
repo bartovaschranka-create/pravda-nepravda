@@ -69,36 +69,59 @@ const sampleRecords = [
 
 const searchTargets = [
   {
-    label: "Běžná média napříč historií",
+    label: "Běžná média",
+    type: "Článek",
     build: (query, dates) => `https://www.google.com/search?q=${query}${dates.google}`
   },
   {
-    label: "Google Zprávy archiv",
+    label: "iROZHLAS",
+    type: "Článek",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Airozhlas.cz${dates.google}`
+  },
+  {
+    label: "ČT24",
+    type: "Článek",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Act24.ceskatelevize.cz${dates.google}`
+  },
+  {
+    label: "ČTK / České noviny",
+    type: "Článek",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Aceskenoviny.cz${dates.google}`
+  },
+  {
+    label: "Google Zprávy",
+    type: "Článek",
     build: (query) => `https://news.google.com/search?q=${query}&hl=cs&gl=CZ&ceid=CZ%3Acs`
   },
   {
     label: "Seznam vyhledávání",
+    type: "Článek",
     build: (query) => `https://search.seznam.cz/?q=${query}`
   },
   {
     label: "Parlamentní a veřejné databáze",
-    build: (query) => `https://www.google.com/search?q=${query}+site%3Apsp.cz+OR+site%3Asenat.cz+OR+site%3Avlada.gov.cz`
+    type: "Tisková zpráva",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Apsp.cz+OR+site%3Asenat.cz+OR+site%3Avlada.gov.cz${dates.google}`
   },
   {
     label: "Rozhovory a videa",
-    build: (query) => `https://www.google.com/search?q=${query}+rozhovor+OR+interview+site%3Ayoutube.com`
+    type: "Rozhovor",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+rozhovor+OR+interview+site%3Ayoutube.com${dates.google}`
   },
   {
     label: "Tiskové zprávy",
-    build: (query) => `https://www.google.com/search?q=${query}+%22tiskov%C3%A1+zpr%C3%A1va%22+OR+%22press+release%22`
+    type: "Tisková zpráva",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+%22tiskov%C3%A1+zpr%C3%A1va%22+OR+%22press+release%22${dates.google}`
   },
   {
     label: "Sociální sítě",
-    build: (query) => `https://www.google.com/search?q=${query}+site%3Ax.com+OR+site%3Atwitter.com+OR+site%3Afacebook.com+OR+site%3Ainstagram.com`
+    type: "Sociální síť",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Ax.com+OR+site%3Atwitter.com+OR+site%3Afacebook.com+OR+site%3Ainstagram.com${dates.google}`
   },
   {
-    label: "Investigativní weby",
-    build: (query) => `https://www.google.com/search?q=${query}+investigace+OR+kauza+OR+dokumenty+OR+anal%C3%BDza`
+    label: "Investigativní a analytické zdroje",
+    type: "Investigativní web",
+    build: (query, dates) => `https://www.google.com/search?q=${query}+investigace+OR+anal%C3%BDza+OR+dokumenty+site%3Ainvestigace.cz+OR+site%3Ahlidacipes.org+OR+site%3Arespekt.cz${dates.google}`
   }
 ];
 
@@ -137,6 +160,14 @@ function buildDateOperators(filters) {
   };
 }
 
+function describePeriod(filters) {
+  if (!filters.dateFrom && !filters.dateTo) {
+    return "od začátku veřejně dostupného webu do současnosti";
+  }
+
+  return [filters.dateFrom || "od začátku veřejně dostupného webu", filters.dateTo || "současnost"].join(" až ");
+}
+
 function collectFilters() {
   return {
     person: personInput.value.trim(),
@@ -165,15 +196,37 @@ function renderSourceLinks(filters) {
   });
 }
 
+function buildGeneratedRecords(filters) {
+  const queryText = buildQueryParts(filters);
+  const query = encodeURIComponent(queryText);
+  const dates = buildDateOperators(filters);
+  const period = describePeriod(filters);
+
+  return searchTargets
+    .filter((target) => !filters.sourceType || target.type === filters.sourceType)
+    .filter((target) => !filters.source || target.label.toLowerCase().includes(filters.source.toLowerCase()))
+    .map((target) => ({
+      date: "",
+      dateLabel: "všechny roky",
+      type: target.type,
+      title: `Vyhledat ve zdroji: ${target.label}`,
+      source: target.label,
+      quote: `Dotaz: "${queryText}". Po otevření zdroje zobrazte v aplikaci jen krátkou relevantní citaci, ne celý článek.`,
+      relevance: `Tento zdroj je relevantní pro ověření veřejně dohledatelných výroků a kontextu k tématu "${filters.keywords}" v období ${period}, bez použití bulvárních nebo dezinformačních webů.`,
+      url: target.build(query, dates)
+    }));
+}
+
 function filterRecords(records, filters) {
   return records.filter((record) => {
-    const recordTime = new Date(`${record.date}T12:00:00`).getTime();
+    const recordTime = record.date ? new Date(`${record.date}T12:00:00`).getTime() : 0;
     const fromTime = filters.dateFrom ? new Date(`${filters.dateFrom}T00:00:00`).getTime() : -Infinity;
     const toTime = filters.dateTo ? new Date(`${filters.dateTo}T23:59:59`).getTime() : Infinity;
     const sourceMatch = !filters.source || record.source.toLowerCase().includes(filters.source.toLowerCase());
     const typeMatch = !filters.sourceType || record.type === filters.sourceType;
+    const dateMatch = record.date ? recordTime >= fromTime && recordTime <= toTime : true;
 
-    return recordTime >= fromTime && recordTime <= toTime && sourceMatch && typeMatch;
+    return dateMatch && sourceMatch && typeMatch;
   });
 }
 
@@ -183,15 +236,15 @@ function renderQuoteCards(records) {
   records.slice(0, 4).forEach((record) => {
     const card = quoteCardTemplate.content.cloneNode(true);
     card.querySelector(".type-badge").textContent = record.type;
-    card.querySelector("time").dateTime = record.date;
-    card.querySelector("time").textContent = `${formatDate(record.date)} · ${record.source}`;
+    card.querySelector("time").dateTime = record.date || "";
+    card.querySelector("time").textContent = `${record.dateLabel || formatDate(record.date)} · ${record.source}`;
     card.querySelector("h4").textContent = record.title;
     card.querySelector("blockquote").textContent = record.quote;
     card.querySelector(".relevance").textContent = record.relevance;
 
     const link = card.querySelector("a");
     link.href = record.url;
-    link.textContent = "Otevřít celý zdroj";
+    link.textContent = "Otevřít zdroj";
 
     quoteCards.append(card);
   });
@@ -207,9 +260,9 @@ function renderTimeline(records) {
     .sort((a, b) => new Date(a.date) - new Date(b.date))
     .forEach((record) => {
       const item = timelineTemplate.content.cloneNode(true);
-      item.querySelector(".date-pill").textContent = formatDate(record.date);
+      item.querySelector(".date-pill").textContent = record.dateLabel || formatDate(record.date);
       item.querySelector(".type-badge").textContent = record.type;
-      item.querySelector("time").dateTime = record.date;
+      item.querySelector("time").dateTime = record.date || "";
       item.querySelector("time").textContent = record.source;
       item.querySelector("h4").textContent = record.title;
       item.querySelector("blockquote").textContent = record.quote;
@@ -218,16 +271,16 @@ function renderTimeline(records) {
 
       const link = item.querySelector("a");
       link.href = record.url;
-      link.textContent = "Otevřít celý článek / zdroj";
+      link.textContent = "Otevřít zdroj";
 
       timeline.append(item);
     });
 }
 
 function renderSummary(filters, records) {
-  const period = [filters.dateFrom || "nejstarší dostupné zdroje", filters.dateTo || "současnost"].join(" až ");
-  const types = records.length ? [...new Set(records.map((record) => record.type.toLowerCase()))].join(", ") : "žádné ukázkové typy";
-  summaryText.textContent = `Dotaz porovnává veřejné zdroje pro "${filters.person}" a téma "${filters.keywords}" v období ${period}. Nalezené nebo připravené záznamy jsou typu ${types}. Shrnutí neurčuje, zda je výrok pravdivý; upozorňuje pouze na dohledatelné souvislosti, návaznosti, možné rozpory a nedostatek dat.`;
+  const period = describePeriod(filters);
+  const types = records.length ? [...new Set(records.map((record) => record.type.toLowerCase()))].join(", ") : "žádné zdroje";
+  summaryText.textContent = `Dotaz porovnává veřejné zdroje pro "${filters.person}" a téma "${filters.keywords}" v období ${period}. Zobrazené položky jsou typu ${types}. Shrnutí neurčuje, zda je výrok pravdivý; upozorňuje pouze na dohledatelné souvislosti, návaznosti, možné rozpory a nedostatek dat.`;
   summaryCard.classList.remove("hidden");
 }
 
@@ -249,7 +302,7 @@ form.addEventListener("submit", (event) => {
     return;
   }
 
-  runSearch(filters);
+  runSearch(filters, buildGeneratedRecords(filters));
 });
 
 sampleButton.addEventListener("click", () => {

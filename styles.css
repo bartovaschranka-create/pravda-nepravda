@@ -159,6 +159,13 @@ label {
   font-weight: 700;
 }
 
+.field-help {
+  margin-top: -0.25rem;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
 input,
 textarea,
 select {

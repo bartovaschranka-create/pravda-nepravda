@@ -21,7 +21,7 @@
           </div>
           <div>
             <h1 id="app-title">Pravda-nepravda</h1>
-            <p>Veřejné výroky, zdroje a souvislosti dohledatelné hluboko do minulosti.</p>
+            <p>Veřejné výroky, zdroje a souvislosti dohledatelné napříč dostupným webem.</p>
           </div>
         </div>
 
@@ -50,6 +50,7 @@
               <input id="date-to" name="dateTo" type="date">
             </div>
           </div>
+          <p class="field-help">Když období nevyplníte, bere se vše od začátku veřejně dostupného webu do současnosti.</p>
 
           <label for="source">Zdroj / médium</label>
           <input id="source" name="source" autocomplete="off" placeholder="Např. iROZHLAS, ČT24, X, psp.cz">
@@ -66,13 +67,13 @@
 
           <button type="submit">
             <span aria-hidden="true">⌕</span>
-            Hledat historické zdroje
+            Vyhledat
           </button>
         </form>
 
         <div class="source-box" aria-label="Zdroje vyhledávání">
-          <h2>Hlubší vyhledávání</h2>
-          <p>Odkazy kombinují osobu, citaci, téma, období, médium a typ zdroje.</p>
+          <h2>Vyhledávání</h2>
+          <p>Odkazy kombinují osobu, citaci, téma, období, médium a typ zdroje. Upřednostněná jsou běžná média, veřejné databáze, instituce a seriózní investigativní zdroje.</p>
           <div id="source-links" class="source-links"></div>
         </div>
 
@@ -89,7 +90,7 @@
       <section class="results-panel" aria-live="polite">
         <div class="toolbar">
           <div>
-            <p class="eyebrow">MVP historického dohledávání</p>
+            <p class="eyebrow">MVP dohledávání zdrojů</p>
             <h2 id="result-title">Zadejte osobu, výrok a téma</h2>
           </div>
           <div class="view-actions">
@@ -105,7 +106,7 @@
             <span></span>
             <span></span>
           </div>
-          <p>Statická verze pro GitHub Pages nemůže sama stahovat výsledky z médií a sociálních sítí. Připraví proto přesné historické vyhledávací dotazy, ukáže strukturu výsledků a umožní ručně doplňovat ověřené záznamy bez ukládání celých článků.</p>
+          <p>Statická verze pro GitHub Pages nemůže sama stahovat výsledky z médií a sociálních sítí. Po vyhledání proto zobrazí konkrétní odkazy na důvěryhodné veřejné zdroje a šablonu výsledků: krátká citace, datum, médium, relevance a odkaz na původní článek.</p>
         </div>
 
         <section id="summary-card" class="summary-card hidden" aria-labelledby="summary-title">

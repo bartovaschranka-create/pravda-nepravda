@@ -14,7 +14,7 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - období od-do,
 - zdroj / médium,
 - typ zdroje: rozhovor, článek, tisková zpráva, sociální síť, investigativní web,
-- odkazy pro hlubší historické vyhledávání v médiích, veřejných databázích, rozhovorech, tiskových zprávách, sociálních sítích a investigativních webech,
+- odkazy pro vyhledávání v médiích, veřejných databázích, rozhovorech, tiskových zprávách, sociálních sítích a investigativních webech,
 - karty nejdůležitějších relevantních citací,
 - časová osa zdrojů,
 - krátké neutrální shrnutí souvislostí.
@@ -29,7 +29,7 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 
 ## Omezení statické verze
 
-GitHub Pages bez backendu nemůže spolehlivě automaticky stahovat výsledky z médií, vyhledávačů a sociálních sítí. MVP proto generuje přesné historické vyhledávací dotazy a ukazuje strukturu, do které lze napojit vyhledávací API, vlastní backend nebo ručně ověřená data.
+GitHub Pages bez backendu nemůže spolehlivě automaticky stahovat výsledky z médií, vyhledávačů a sociálních sítí. MVP proto generuje přesné vyhledávací dotazy a ukazuje strukturu, do které lze později napojit vyhledávací API nebo vlastní backend.
 
 ## Spuštění
 
