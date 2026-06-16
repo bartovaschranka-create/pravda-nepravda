@@ -383,8 +383,10 @@ function buildGeneratedRecords(filters) {
       matchType: isExact ? "exact" : "related",
       matchLabel: `${target.group === "top" ? "TOP zdroj" : "Archivní/starší zdroj"} · ${matchLabel}`,
       relevanceScore: target.priority + termWeight + personWeight + (target.group === "top" ? 20 : 0),
+      quote: "",
       excerpt: "",
       relevance: journalisticRelevance(target, filters),
+      sourceBrief: sourceBriefFor(target, filters),
       timeContext: timeContextFor(target, filters),
       scoreLabel: scoreLabelFor(target.priority + termWeight + personWeight + (target.group === "top" ? 20 : 0)),
       directUrl: "",
@@ -435,6 +437,65 @@ function journalisticRelevance(target, filters) {
   }
 
   return `Článek přináší dobový popis událostí k tématu ${topic}, včetně citací a reakcí hlavních aktérů.`;
+}
+
+function sourceBriefFor(target, filters) {
+  const person = filters.person || "sledovaná osoba";
+  const topic = filters.keywords || "téma";
+
+  if (target.label === "iROZHLAS") {
+    return [
+      `Hledejte konkrétní citace osoby ${person} a reakce dalších aktérů.`,
+      `U tématu ${topic} bývají užitečné časové souvislosti a odkazy na navazující texty.`
+    ];
+  }
+
+  if (target.label === "ČT24") {
+    return [
+      "Zdroj může ukázat, kdy se věc dostala do hlavních zpráv.",
+      `U tématu ${topic} jsou důležité dobové reakce politiků, institucí nebo dalších účastníků.`
+    ];
+  }
+
+  if (target.label === "ČTK / České noviny") {
+    return [
+      "Agenturní text pomůže rychle zjistit základní sled událostí.",
+      "Hledejte datum, stručné shrnutí a citovaná vyjádření hlavních aktérů."
+    ];
+  }
+
+  if (target.type === "Rozhovor") {
+    return [
+      `Nejdůležitější je přímé vyjádření osoby ${person}.`,
+      "Rozhovor může ukázat, jak byla věc formulovaná v dané době, ne až zpětně."
+    ];
+  }
+
+  if (target.type === "Tisková zpráva") {
+    return [
+      "Sledujte datum, instituci a přesné znění oficiálního stanoviska.",
+      `U tématu ${topic} může dokument doplnit rámec události bez redakční zkratky.`
+    ];
+  }
+
+  if (target.type === "Investigativní web") {
+    return [
+      "Hledejte dokumenty, návaznosti a osoby nebo firmy zmiňované v případu.",
+      "Takový zdroj bývá užitečný pro pochopení delší časové linky."
+    ];
+  }
+
+  if (target.type === "Sociální síť") {
+    return [
+      "Veřejný příspěvek může zachytit bezprostřední reakci před vydáním delších článků.",
+      "Důležité je datum příspěvku a přesné znění citace."
+    ];
+  }
+
+  return [
+    `Zdroj může přinést základní popis událostí k tématu ${topic}.`,
+    "Hledejte konkrétní citace, datum vydání a navazující reakce."
+  ];
 }
 
 function scoreLabelFor(score) {
@@ -547,21 +608,35 @@ function renderPersonProfile(filters) {
 }
 
 function excerptFor(record) {
+  const quote = record.quote && record.quote.trim();
   const excerpt = record.excerpt && record.excerpt.trim();
+  const text = quote || excerpt;
 
-  if (!excerpt) {
+  if (!text) {
     return "";
   }
 
-  if (excerpt.length <= EXCERPT_LIMIT) {
-    return excerpt;
+  if (text.length <= EXCERPT_LIMIT) {
+    return text;
   }
 
-  const shortened = excerpt.slice(0, EXCERPT_LIMIT);
+  const shortened = text.slice(0, EXCERPT_LIMIT);
   const lastSpace = shortened.lastIndexOf(" ");
   const cleanCut = lastSpace > 180 ? shortened.slice(0, lastSpace) : shortened;
 
   return `${cleanCut.trim()}…`;
+}
+
+function quoteLabelFor(record) {
+  if (record.quote && record.quote.trim()) {
+    return "Citace výroku";
+  }
+
+  if (record.excerpt && record.excerpt.trim()) {
+    return "Úryvek ze zdroje";
+  }
+
+  return "";
 }
 
 function setAiStatus(message, state = "") {
@@ -583,8 +658,10 @@ function normalizeAiRecord(record, index) {
     matchType: record.matchType || "exact",
     matchLabel: record.matchLabel || "Doplněno ze zdroje",
     relevanceScore: Number(record.relevanceScore || 0),
+    quote: record.quote || record.statementQuote || "",
     excerpt: record.excerpt || "",
     relevance: record.relevance || "Zdroj přináší informace k zadané osobě, tématu a časovému kontextu.",
+    sourceBrief: record.sourceBrief || [],
     timeContext: record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.",
     scoreLabel: record.scoreLabel || scoreLabelFor(Number(record.relevanceScore || 0)),
     statementQuote: record.statementQuote || "",
@@ -665,10 +742,12 @@ function renderQuoteCards(records) {
     card.querySelector(".score-label").textContent = record.scoreLabel || scoreLabelFor(record.relevanceScore || 0);
     card.querySelector(".time-context").textContent = record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.";
     renderTags(card.querySelector(".tag-list"), record.tags || [record.type]);
+    renderSourceBrief(card.querySelector(".source-brief"), record);
     const excerptText = excerptFor(record);
     const excerptLabel = card.querySelector(".excerpt-label");
     const excerptBlock = card.querySelector("blockquote");
     excerptBlock.textContent = excerptText;
+    excerptLabel.textContent = quoteLabelFor(record);
     excerptLabel.classList.toggle("hidden", !excerptText);
     excerptBlock.classList.toggle("hidden", !excerptText);
     card.querySelector(".relevance").textContent = record.relevance;
@@ -703,10 +782,12 @@ function renderTimeline(records) {
       item.querySelector(".score-label").textContent = record.scoreLabel || scoreLabelFor(record.relevanceScore || 0);
       item.querySelector(".time-context").textContent = record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.";
       renderTags(item.querySelector(".tag-list"), record.tags || [record.type]);
+      renderSourceBrief(item.querySelector(".source-brief"), record);
       const excerptText = excerptFor(record);
       const excerptLabel = item.querySelector(".excerpt-label");
       const excerptBlock = item.querySelector("blockquote");
       excerptBlock.textContent = excerptText;
+      excerptLabel.textContent = quoteLabelFor(record);
       excerptLabel.classList.toggle("hidden", !excerptText);
       excerptBlock.classList.toggle("hidden", !excerptText);
       item.querySelector(".source-name").textContent = record.source;
@@ -728,6 +809,30 @@ function renderTags(container, tags) {
     tagEl.textContent = tag;
     container.append(tagEl);
   });
+}
+
+function renderSourceBrief(container, record) {
+  container.replaceChildren();
+  const points = Array.isArray(record.sourceBrief) ? record.sourceBrief.filter(Boolean).slice(0, 3) : [];
+
+  if (!points.length) {
+    container.classList.add("hidden");
+    return;
+  }
+
+  container.classList.remove("hidden");
+
+  const title = document.createElement("strong");
+  const list = document.createElement("ul");
+  title.textContent = "Co z toho číst";
+
+  points.forEach((point) => {
+    const item = document.createElement("li");
+    item.textContent = point;
+    list.append(item);
+  });
+
+  container.append(title, list);
 }
 
 function renderTopicIntro(filters, records) {
@@ -829,7 +934,7 @@ function renderStatements(records) {
     const year = record.date ? new Date(`${record.date}T12:00:00`).getFullYear() : "bez data";
     item.className = "statement-item";
     title.textContent = String(year);
-    quote.textContent = record.statementQuote || excerptFor(record);
+    quote.textContent = record.statementQuote || record.quote || excerptFor(record);
     item.append(title, quote);
     statementsList.append(item);
   });

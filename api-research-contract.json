@@ -28,6 +28,7 @@
         "type": "Článek",
         "directUrl": "https://example.com/clanek",
         "searchUrl": "https://www.google.com/search?q=...",
+        "quote": "Přímá citace výroku, pokud je ve zdroji dohledatelná.",
         "excerpt": "Krátký výňatek přímo ze zdroje, maximálně několik vět.",
         "relevance": "Proč je zdroj relevantní k osobě, tématu a časovému kontextu.",
         "matchedTerm": "drogy",

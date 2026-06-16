@@ -21,7 +21,7 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - funkce `expandSearchTerms(query)` pro technické rozšíření dotazu o související výrazy a varianty bez diakritiky,
 - označení, zda je výsledek podle přesného dotazu nebo podle souvisejícího výrazu,
 - karty hlavních zdrojů,
-- pole `excerpt` pro krátký výňatek přímo ze zdroje; pokud chybí, místo citace se nezobrazuje žádný zástupný text,
+- pole `quote` pro přímou citaci výroku a pole `excerpt` pro podpůrný úryvek ze zdroje,
 - dlouhé výňatky se v náhledu automaticky zkrátí, aby karta ukazovala jen zásadní část a ne celý článek,
 - volitelné napojení `/api/research`, které může automaticky dohledat zdroje a vrátit krátké výňatky do pole `excerpt`,
 - časová osa zdrojů,

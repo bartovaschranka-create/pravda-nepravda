@@ -537,6 +537,24 @@ button.secondary:hover,
   gap: 0.45rem;
 }
 
+.source-brief {
+  display: grid;
+  gap: 0.35rem;
+  border-left: 3px solid var(--line);
+  padding-left: 0.75rem;
+  color: #334155;
+  line-height: 1.45;
+}
+
+.source-brief strong {
+  color: var(--ink);
+}
+
+.source-brief ul {
+  margin: 0;
+  padding-left: 1rem;
+}
+
 .tag,
 .related-chip,
 .year-chip {
