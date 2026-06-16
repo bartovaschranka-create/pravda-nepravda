@@ -14,12 +14,14 @@ const quoteCardsSection = document.querySelector("#quote-cards-section");
 const emptyState = document.querySelector("#empty-state");
 const summaryCard = document.querySelector("#summary-card");
 const summaryText = document.querySelector("#summary-text");
+const aiStatus = document.querySelector("#ai-status");
 const sampleButton = document.querySelector("#sample-btn");
 const clearButton = document.querySelector("#clear-btn");
 const timelineTemplate = document.querySelector("#timeline-item-template");
 const quoteCardTemplate = document.querySelector("#quote-card-template");
 const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
+const AI_RESEARCH_ENDPOINT = "api/research";
 
 const TERM_EXPANSIONS = [
   {
@@ -360,7 +362,7 @@ function excerptFor(record) {
   const excerpt = record.excerpt && record.excerpt.trim();
 
   if (!excerpt) {
-    return "Výňatek zatím není doplněn";
+    return "AI výňatek zatím není k dispozici. Po připojení rešeršního backendu se tady zobrazí krátká pasáž, která nejlépe vystihuje zdroj.";
   }
 
   if (excerpt.length <= EXCERPT_LIMIT) {
@@ -372,6 +374,76 @@ function excerptFor(record) {
   const cleanCut = lastSpace > 180 ? shortened.slice(0, lastSpace) : shortened;
 
   return `${cleanCut.trim()}…`;
+}
+
+function setAiStatus(message, state = "") {
+  aiStatus.textContent = message;
+  aiStatus.className = `ai-status ${state}`.trim();
+  aiStatus.classList.toggle("hidden", !message);
+}
+
+function normalizeAiRecord(record, index) {
+  return {
+    date: record.date || "",
+    dateLabel: record.date ? "" : "AI zdroj",
+    type: record.type || "Článek",
+    title: record.title || record.source || `AI zdroj ${index + 1}`,
+    source: record.source || "Neznámý zdroj",
+    sourceGroup: record.sourceGroup || (index < 12 ? "top" : "archive"),
+    matchedTerm: record.matchedTerm || "",
+    matchType: record.matchType || "exact",
+    matchLabel: record.matchLabel || "nalezeno AI rešerší",
+    relevanceScore: Number(record.relevanceScore || 0),
+    excerpt: record.excerpt || "",
+    relevance: record.relevance || "AI označila zdroj jako relevantní k zadané osobě, tématu a časovému kontextu.",
+    url: record.url || "#"
+  };
+}
+
+async function fetchAiRecords(filters) {
+  if (window.location.protocol === "file:") {
+    setAiStatus("AI výňatky vyžadují backend. Při otevření přes soubor se zobrazují jen zdrojové odkazy.", "is-warning");
+    return null;
+  }
+
+  setAiStatus("AI rešerše hledá zdroje a krátké výňatky…", "is-loading");
+
+  try {
+    const response = await fetch(AI_RESEARCH_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        filters,
+        expandedTerms: expandSearchTerms(filters.keywords),
+        limit: RESULT_LIMIT,
+        rules: {
+          maxExcerptChars: EXCERPT_LIMIT,
+          noFullArticles: true,
+          neutralOnly: true
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`AI backend returned ${response.status}`);
+    }
+
+    const payload = await response.json();
+    const records = Array.isArray(payload.records) ? payload.records : [];
+
+    if (!records.length) {
+      setAiStatus("AI backend nevrátil žádné zdroje. Zůstávají zobrazené připravené odkazy.", "is-warning");
+      return null;
+    }
+
+    setAiStatus(`AI doplnila ${Math.min(records.length, RESULT_LIMIT)} zdrojů s krátkými výňatky.`, "is-ready");
+    return records.slice(0, RESULT_LIMIT).map(normalizeAiRecord);
+  } catch (error) {
+    setAiStatus("AI backend zatím není připojený. Zobrazují se zdrojové odkazy připravené pro rešerši.", "is-warning");
+    return null;
+  }
 }
 
 function filterRecords(records, filters) {
@@ -457,7 +529,7 @@ function runSearch(filters, records = sampleRecords) {
   emptyState.classList.add("hidden");
 }
 
-form.addEventListener("submit", (event) => {
+form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const filters = collectFilters();
 
@@ -466,6 +538,11 @@ form.addEventListener("submit", (event) => {
   }
 
   runSearch(filters, buildGeneratedRecords(filters));
+
+  const aiRecords = await fetchAiRecords(filters);
+  if (aiRecords) {
+    runSearch(filters, aiRecords);
+  }
 });
 
 sampleButton.addEventListener("click", () => {
@@ -486,6 +563,7 @@ clearButton.addEventListener("click", () => {
   quoteCards.replaceChildren();
   resultTitle.textContent = "Zadejte osobu, výrok a téma";
   summaryCard.classList.add("hidden");
+  setAiStatus("");
   quoteCardsSection.classList.add("hidden");
   emptyState.classList.remove("hidden");
   renderSourceLinks({

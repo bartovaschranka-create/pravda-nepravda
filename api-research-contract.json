@@ -1,0 +1,40 @@
+{
+  "endpoint": "/api/research",
+  "method": "POST",
+  "request": {
+    "filters": {
+      "person": "Ivan Bartoš",
+      "exactQuote": "",
+      "keywords": "drogy",
+      "dateFrom": "",
+      "dateTo": "",
+      "source": "",
+      "sourceType": ""
+    },
+    "expandedTerms": ["drogy"],
+    "limit": 30,
+    "rules": {
+      "maxExcerptChars": 260,
+      "noFullArticles": true,
+      "neutralOnly": true
+    }
+  },
+  "response": {
+    "records": [
+      {
+        "title": "Název článku nebo rozhovoru",
+        "source": "Médium",
+        "date": "2024-01-15",
+        "type": "Článek",
+        "url": "https://example.com/clanek",
+        "excerpt": "Krátký výňatek přímo ze zdroje, maximálně několik vět.",
+        "relevance": "Proč je zdroj relevantní k osobě, tématu a časovému kontextu.",
+        "matchedTerm": "drogy",
+        "matchType": "exact",
+        "matchLabel": "TOP zdroj · nalezeno podle přesného dotazu",
+        "sourceGroup": "top",
+        "relevanceScore": 195
+      }
+    ]
+  }
+}

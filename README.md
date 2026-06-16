@@ -21,6 +21,7 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - karty nejdůležitějších relevantních zdrojů,
 - pole `excerpt` pro krátký výňatek přímo ze zdroje; pokud chybí, zobrazí se „Výňatek zatím není doplněn“,
 - dlouhé výňatky se v náhledu automaticky zkrátí, aby karta ukazovala jen zásadní část a ne celý článek,
+- volitelný AI backend `/api/research`, který může automaticky dohledat zdroje a vrátit krátké výňatky do pole `excerpt`,
 - časová osa zdrojů,
 - krátké neutrální shrnutí souvislostí.
 
@@ -34,7 +35,9 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 
 ## Omezení statické verze
 
-GitHub Pages bez backendu nemůže spolehlivě automaticky stahovat výsledky z médií, vyhledávačů a sociálních sítí. MVP proto generuje přesné vyhledávací dotazy a ukazuje strukturu, do které lze později napojit vyhledávací API nebo vlastní backend.
+GitHub Pages bez backendu nemůže spolehlivě automaticky stahovat výsledky z médií, vyhledávačů a sociálních sítí. MVP proto generuje přesné vyhledávací dotazy a umí volitelně zavolat `/api/research`. Tento backend má dohledat zdroje, stáhnout text jen pro analýzu, vybrat krátký výňatek a vrátit ho jako `excerpt`.
+
+Kontrakt endpointu je v `api-research-contract.json`.
 
 ## Spuštění
 

@@ -68,7 +68,7 @@
 
           <button type="submit">
             <span aria-hidden="true">⌕</span>
-            Vyhledat
+            Vyhledat s AI
           </button>
         </form>
 
@@ -116,10 +116,13 @@
           <p id="summary-text"></p>
         </section>
 
+        <div id="ai-status" class="ai-status hidden" role="status"></div>
+
         <section id="quote-cards-section" class="quote-cards-section hidden" aria-labelledby="quote-cards-title">
           <div class="section-head">
             <p class="eyebrow">TOP zdroje</p>
-            <h3 id="quote-cards-title">Až 30 nejrelevantnějších zdrojů</h3>
+            <h3 id="quote-cards-title">Až 30 zdrojů podle relevance</h3>
+            <p class="section-note">Nahoře jsou prioritní zdroje, níže archivní a starší odkazy. Každá karta ukazuje krátký zkrácený výňatek, pokud je k dispozici.</p>
           </div>
           <div id="quote-cards" class="quote-cards"></div>
         </section>
@@ -142,6 +145,7 @@
           <time></time>
         </div>
         <p class="match-note"></p>
+        <p class="excerpt-label">Zkrácený výňatek ze zdroje</p>
         <blockquote></blockquote>
         <p class="relevance"></p>
         <a target="_blank" rel="noopener noreferrer"></a>
@@ -158,6 +162,7 @@
           </div>
           <h4></h4>
           <p class="match-note"></p>
+          <p class="excerpt-label">Zkrácený výňatek ze zdroje</p>
           <blockquote></blockquote>
           <dl class="source-detail">
             <div>
