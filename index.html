@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="cs">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Citace v čase - veřejné výroky a související události přehledně v časové ose.">
+    <title>Citace v čase</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="search-panel" aria-labelledby="app-title">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div>
+            <h1 id="app-title">Citace v čase</h1>
+            <p>Veřejné výroky a související události přehledně v čase.</p>
+          </div>
+        </div>
+
+        <form id="search-form" class="search-form">
+          <label for="person">Osoba</label>
+          <input id="person" name="person" autocomplete="off" placeholder="Např. Andrej Babiš" required>
+
+          <label for="keywords">Klíčová slova</label>
+          <textarea id="keywords" name="keywords" rows="3" placeholder="Např. obilí Ukrajina" required></textarea>
+
+          <button type="submit">
+            <span aria-hidden="true">⌕</span>
+            Hledat v časové ose
+          </button>
+        </form>
+
+        <div class="source-box" aria-label="Zdroje vyhledávání">
+          <h2>Vyhledávací zdroje</h2>
+          <div id="source-links" class="source-links"></div>
+        </div>
+
+        <div class="principles">
+          <h2>Pravidla MVP</h2>
+          <ul>
+            <li>Krátké citace, datum, médium a odkaz.</li>
+            <li>Bez hodnocení osob a bez ukládání článků.</li>
+            <li>Souvislosti jsou formulované neutrálně.</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="results-panel" aria-live="polite">
+        <div class="toolbar">
+          <div>
+            <p class="eyebrow">MVP verze 1</p>
+            <h2 id="result-title">Zadejte osobu a téma</h2>
+          </div>
+          <div class="view-actions">
+            <button id="sample-btn" type="button">Ukázková osa</button>
+            <button id="clear-btn" type="button" class="secondary">Vyčistit</button>
+          </div>
+        </div>
+
+        <div id="empty-state" class="empty-state">
+          <div class="empty-visual" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p>Aplikace pro GitHub Pages neumí sama obcházet webové vyhledávače. MVP proto připraví cílené odkazy na veřejné zdroje a zobrazí časovou osu z ověřených ukázkových nebo ručně doplněných záznamů.</p>
+        </div>
+
+        <section id="summary-card" class="summary-card hidden" aria-labelledby="summary-title">
+          <p class="eyebrow">AI shrnutí souvislostí</p>
+          <h3 id="summary-title">Neutrální orientace</h3>
+          <p id="summary-text"></p>
+        </section>
+
+        <div id="timeline" class="timeline" aria-label="Časová osa"></div>
+      </section>
+    </main>
+
+    <template id="timeline-item-template">
+      <article class="timeline-item">
+        <div class="date-pill"></div>
+        <div class="timeline-content">
+          <div class="item-head">
+            <span class="type-badge"></span>
+            <time></time>
+          </div>
+          <blockquote></blockquote>
+          <p class="context"></p>
+          <a target="_blank" rel="noopener noreferrer"></a>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
