@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Citace v čase - veřejné výroky a související události přehledně v časové ose.">
-    <title>Citace v čase</title>
+    <meta name="description" content="Pravda-nepravda: dohledatelné veřejné výroky, citace a zdroje v časovém kontextu.">
+    <title>Pravda-nepravda</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -20,35 +20,68 @@
             <span></span>
           </div>
           <div>
-            <h1 id="app-title">Citace v čase</h1>
-            <p>Veřejné výroky a související události přehledně v čase.</p>
+            <h1 id="app-title">Pravda-nepravda</h1>
+            <p>Veřejné výroky, zdroje a souvislosti dohledatelné hluboko do minulosti.</p>
           </div>
+        </div>
+
+        <div class="notice">
+          <strong>Upozornění:</strong>
+          Aplikace neurčuje absolutní pravdu. Ukazuje dohledatelné rozpory, souvislosti, časovou posloupnost a odkazy na původní zdroje.
         </div>
 
         <form id="search-form" class="search-form">
           <label for="person">Osoba</label>
           <input id="person" name="person" autocomplete="off" placeholder="Např. Andrej Babiš" required>
 
-          <label for="keywords">Klíčová slova</label>
-          <textarea id="keywords" name="keywords" rows="3" placeholder="Např. obilí Ukrajina" required></textarea>
+          <label for="quote">Přesná citace</label>
+          <textarea id="quote" name="quote" rows="3" placeholder="Volitelné: vložte přesný výrok v uvozovkách"></textarea>
+
+          <label for="keywords">Téma / klíčová slova</label>
+          <textarea id="keywords" name="keywords" rows="3" placeholder="Např. obilí Ukrajina, daně, robotaxi" required></textarea>
+
+          <div class="date-grid">
+            <div>
+              <label for="date-from">Období od</label>
+              <input id="date-from" name="dateFrom" type="date">
+            </div>
+            <div>
+              <label for="date-to">Období do</label>
+              <input id="date-to" name="dateTo" type="date">
+            </div>
+          </div>
+
+          <label for="source">Zdroj / médium</label>
+          <input id="source" name="source" autocomplete="off" placeholder="Např. iROZHLAS, ČT24, X, psp.cz">
+
+          <label for="source-type">Typ zdroje</label>
+          <select id="source-type" name="sourceType">
+            <option value="">Všechny typy</option>
+            <option value="Rozhovor">Rozhovor</option>
+            <option value="Článek">Článek</option>
+            <option value="Tisková zpráva">Tisková zpráva</option>
+            <option value="Sociální síť">Sociální síť</option>
+            <option value="Investigativní web">Investigativní web</option>
+          </select>
 
           <button type="submit">
             <span aria-hidden="true">⌕</span>
-            Hledat v časové ose
+            Hledat historické zdroje
           </button>
         </form>
 
         <div class="source-box" aria-label="Zdroje vyhledávání">
-          <h2>Vyhledávací zdroje</h2>
+          <h2>Hlubší vyhledávání</h2>
+          <p>Odkazy kombinují osobu, citaci, téma, období, médium a typ zdroje.</p>
           <div id="source-links" class="source-links"></div>
         </div>
 
         <div class="principles">
-          <h2>Pravidla MVP</h2>
+          <h2>Pravidla zobrazení</h2>
           <ul>
-            <li>Krátké citace, datum, médium a odkaz.</li>
-            <li>Bez hodnocení osob a bez ukládání článků.</li>
-            <li>Souvislosti jsou formulované neutrálně.</li>
+            <li>Neukazovat celé články, jen krátké relevantní citace.</li>
+            <li>U každého záznamu uvést název, médium, datum a odkaz.</li>
+            <li>Nehodnotit osobu, pouze porovnávat výroky a kontext.</li>
           </ul>
         </div>
       </section>
@@ -56,11 +89,11 @@
       <section class="results-panel" aria-live="polite">
         <div class="toolbar">
           <div>
-            <p class="eyebrow">MVP verze 1</p>
-            <h2 id="result-title">Zadejte osobu a téma</h2>
+            <p class="eyebrow">MVP historického dohledávání</p>
+            <h2 id="result-title">Zadejte osobu, výrok a téma</h2>
           </div>
           <div class="view-actions">
-            <button id="sample-btn" type="button">Ukázková osa</button>
+            <button id="sample-btn" type="button">Ukázkový případ</button>
             <button id="clear-btn" type="button" class="secondary">Vyčistit</button>
           </div>
         </div>
@@ -72,18 +105,45 @@
             <span></span>
             <span></span>
           </div>
-          <p>Aplikace pro GitHub Pages neumí sama obcházet webové vyhledávače. MVP proto připraví cílené odkazy na veřejné zdroje a zobrazí časovou osu z ověřených ukázkových nebo ručně doplněných záznamů.</p>
+          <p>Statická verze pro GitHub Pages nemůže sama stahovat výsledky z médií a sociálních sítí. Připraví proto přesné historické vyhledávací dotazy, ukáže strukturu výsledků a umožní ručně doplňovat ověřené záznamy bez ukládání celých článků.</p>
         </div>
 
         <section id="summary-card" class="summary-card hidden" aria-labelledby="summary-title">
-          <p class="eyebrow">AI shrnutí souvislostí</p>
-          <h3 id="summary-title">Neutrální orientace</h3>
+          <p class="eyebrow">Neutrální shrnutí</p>
+          <h3 id="summary-title">Souvislosti a možné rozpory</h3>
           <p id="summary-text"></p>
         </section>
 
-        <div id="timeline" class="timeline" aria-label="Časová osa"></div>
+        <section id="quote-cards-section" class="quote-cards-section hidden" aria-labelledby="quote-cards-title">
+          <div class="section-head">
+            <p class="eyebrow">Nejdůležitější citace</p>
+            <h3 id="quote-cards-title">Relevantní zdroje na hlavní stránce</h3>
+          </div>
+          <div id="quote-cards" class="quote-cards"></div>
+        </section>
+
+        <section class="timeline-section" aria-labelledby="timeline-title">
+          <div class="section-head">
+            <p class="eyebrow">Chronologie</p>
+            <h3 id="timeline-title">Časová osa zdrojů</h3>
+          </div>
+          <div id="timeline" class="timeline" aria-label="Časová osa"></div>
+        </section>
       </section>
     </main>
+
+    <template id="quote-card-template">
+      <article class="quote-card">
+        <div class="card-meta">
+          <span class="type-badge"></span>
+          <time></time>
+        </div>
+        <h4></h4>
+        <blockquote></blockquote>
+        <p class="relevance"></p>
+        <a target="_blank" rel="noopener noreferrer"></a>
+      </article>
+    </template>
 
     <template id="timeline-item-template">
       <article class="timeline-item">
@@ -93,8 +153,18 @@
             <span class="type-badge"></span>
             <time></time>
           </div>
+          <h4></h4>
           <blockquote></blockquote>
-          <p class="context"></p>
+          <dl class="source-detail">
+            <div>
+              <dt>Zdroj</dt>
+              <dd class="source-name"></dd>
+            </div>
+            <div>
+              <dt>Relevance</dt>
+              <dd class="relevance"></dd>
+            </div>
+          </dl>
           <a target="_blank" rel="noopener noreferrer"></a>
         </div>
       </article>
