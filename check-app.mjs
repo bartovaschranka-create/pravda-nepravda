@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const APP_VERSION = "0.3.19";
+const APP_VERSION = "0.3.22";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const files = {
   html: "index.html",
@@ -95,11 +95,25 @@ assert(app.includes("has-stance-shift"), "Roky neumí zobrazit marker možného 
 assert(app.includes("PERSON_CANDIDATES"), "Frontend neumí nabídnout více kandidátů při shodném příjmení.");
 assert(app.includes("personCandidatesFor"), "Frontend neumí vyhodnotit nejednoznačnou osobu.");
 assert(app.includes("button.dataset.person"), "Klik na kandidáta neumí upřesnit hledanou osobu.");
+assert(app.includes("Lukáš Krpálek"), "Chybí kandidát Lukáš Krpálek pro nejednoznačné příjmení.");
+assert(app.includes("Michal Krpálek"), "Chybí kandidát Michal Krpálek pro nejednoznačné příjmení.");
+assert(app.includes("Jiří Krpálek"), "Chybí kandidát Jiří Krpálek pro nejednoznačné příjmení.");
+assert(app.includes("Martin Němec"), "Chybí kandidát Martin Němec pro nejednoznačné příjmení.");
+assert(app.includes("personSearchTerm"), "Frontend neumí hledat celé jméno jako přesnou frázi.");
+assert(html.includes("person-context"), "Formulář nemá viditelné pole pro upřesnění osoby.");
+assert(html.includes("<details class=\"advanced-field\">"), "Přesná citace není schovaná v rozbalovací části.");
+assert(app.includes("personContextInput"), "Frontend nečte pole pro upřesnění osoby.");
+assert(app.includes("filters.personContext"), "Frontend nepoužívá upřesnění osoby v dotazu.");
+assert((await text(files.api)).includes("personSearchTerm"), "Backend neumí hledat celé jméno jako přesnou frázi.");
+assert((await text(files.api)).includes("filters.personContext"), "Backend nepoužívá upřesnění osoby v dotazu.");
+assert((await text(files.api)).includes("Zeppelin CZ"), "Backend neumí doplnit firemní souvislosti pro Martina Němce.");
+assert(app.includes("looksLikeDisambiguation"), "Frontend neumí rozpoznat rozcestníkový profil osoby.");
 assert(app.includes("personStanceSummary"), "Profil osoby neumí zobrazit stručný soupis postojů v čase.");
 assert(app.includes("renderYearChangeDetail"), "Klik na rok neumí zobrazit, v čem je naznačený posun.");
 assert(app.includes("formatDate(record.date)"), "Chronologie citací nezobrazuje datum vydání článku.");
 assert(styles.includes(".person-avatar img"), "Chybí styl pro veřejnou fotografii osoby.");
 assert(styles.includes(".candidate-card"), "Chybí styl pro výběr více možných osob.");
+assert(styles.includes(".advanced-field"), "Chybí styl pro rozbalovací přesnou citaci.");
 assert(styles.includes(".person-stance-summary"), "Chybí styl pro soupis postojů v profilu.");
 assert(styles.includes(".year-change-detail"), "Chybí styl pro detail označeného roku.");
 assert(styles.includes(".year-chip.has-stance-shift"), "Chybí styl pro marker možné změny postoje na časové ose.");

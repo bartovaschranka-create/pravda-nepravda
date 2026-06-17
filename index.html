@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Archiv výroků: dohledatelné veřejné výroky, citace a zdroje v časovém kontextu.">
-    <meta name="app-version" content="0.3.19-stance-detail">
+    <meta name="app-version" content="0.3.22-person-context-field">
     <title>Archiv výroků</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=0.3.19">
+    <link rel="stylesheet" href="styles.css?v=0.3.22">
   </head>
   <body>
     <main class="app-shell">
@@ -35,11 +35,17 @@
           <label for="person">Osoba</label>
           <input id="person" name="person" autocomplete="off" placeholder="Např. Andrej Babiš" required>
 
-          <label for="quote">Přesná citace</label>
-          <textarea id="quote" name="quote" rows="3" placeholder="Volitelné: vložte přesný výrok v uvozovkách"></textarea>
+          <label for="person-context">Upřesnění osoby</label>
+          <input id="person-context" name="personContext" autocomplete="off" placeholder="Např. Zeppelin CZ, ODS, judista, firma, město">
 
           <label for="keywords">Téma / klíčová slova</label>
           <textarea id="keywords" name="keywords" rows="3" placeholder="Např. obilí Ukrajina, daně, robotaxi" required></textarea>
+
+          <details class="advanced-field">
+            <summary>Přesná citace</summary>
+            <label for="quote">Přesná citace</label>
+            <textarea id="quote" name="quote" rows="3" placeholder="Volitelné: vložte přesný výrok v uvozovkách"></textarea>
+          </details>
 
           <div class="date-grid">
             <div>
@@ -88,7 +94,7 @@
         </div>
 
         <div class="version-badge" aria-label="Verze aplikace">
-          verze 0.3.19
+          verze 0.3.22
         </div>
       </section>
 
@@ -246,6 +252,6 @@
       </article>
     </template>
 
-    <script src="app.js?v=0.3.19"></script>
+    <script src="app.js?v=0.3.22"></script>
   </body>
 </html>

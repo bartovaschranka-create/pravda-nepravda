@@ -1,5 +1,6 @@
 const form = document.querySelector("#search-form");
 const personInput = document.querySelector("#person");
+const personContextInput = document.querySelector("#person-context");
 const quoteInput = document.querySelector("#quote");
 const keywordsInput = document.querySelector("#keywords");
 const dateFromInput = document.querySelector("#date-from");
@@ -42,7 +43,7 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.19";
+const APP_VERSION = "0.3.22";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
@@ -99,6 +100,27 @@ const PERSON_CANDIDATES = [
     name: "Radim Fiala",
     role: "politik, SPD",
     aliases: ["fiala", "radim fiala"]
+  },
+  {
+    name: "Lukáš Krpálek",
+    role: "judista, olympijský vítěz a mistr světa",
+    aliases: ["krpalek", "krpálek", "lukas krpalek", "lukáš krpálek"]
+  },
+  {
+    name: "Michal Krpálek",
+    role: "judista, starší bratr Lukáše Krpálka",
+    aliases: ["krpalek", "krpálek", "michal krpalek", "michal krpálek"]
+  },
+  {
+    name: "Jiří Krpálek",
+    role: "římskokatolický kněz, biskup skryté církve",
+    aliases: ["krpalek", "krpálek", "jiri krpalek", "jiří krpálek"]
+  },
+  {
+    name: "Martin Němec",
+    role: "veřejně dohledatelná osoba, Zeppelin CZ",
+    context: "Zeppelin CZ",
+    aliases: ["nemec", "němec", "martin nemec", "martin němec", "zeppelin cz"]
   }
 ];
 
@@ -405,7 +427,7 @@ function formatDate(dateValue) {
 }
 
 function buildQueryParts(filters) {
-  const parts = [filters.person, filters.keywords];
+  const parts = [personSearchTerm(filters.person), filters.personContext, filters.keywords];
 
   if (filters.exactQuote) {
     parts.splice(1, 0, `"${filters.exactQuote}"`);
@@ -520,8 +542,14 @@ function expandPersonTerms(person) {
   return uniqueTerms(terms);
 }
 
+function personSearchTerm(person = "") {
+  const trimmed = person.trim();
+  if (!trimmed) return "";
+  return /\s/.test(trimmed) ? `"${trimmed.replace(/"/g, "")}"` : trimmed;
+}
+
 function buildSearchQuery(filters, term, person = filters.person) {
-  const parts = [person, term];
+  const parts = [personSearchTerm(person), filters.personContext, term];
 
   if (filters.exactQuote) {
     parts.splice(1, 0, `"${filters.exactQuote}"`);
@@ -569,6 +597,7 @@ function describePeriod(filters) {
 function collectFilters() {
   return {
     person: personInput.value.trim(),
+    personContext: personContextInput.value.trim(),
     exactQuote: quoteInput.value.trim(),
     keywords: keywordsInput.value.trim(),
     dateFrom: dateFromInput.value,
@@ -817,7 +846,7 @@ function relatedTopicsFor(filters) {
   const mappedTopics = topicKey.includes("capi hnizdo")
     ? ["Andrej Babiš", "Dotace EU", "Agrofert", "střet zájmů"]
     : [];
-  const base = [filters.person, ...terms].filter(Boolean);
+  const base = [filters.person, filters.personContext, ...terms].filter(Boolean);
   const defaults = ["veřejná debata", "oficiální dokumenty", "rozhovory"];
   return uniqueTerms([...mappedTopics, ...base, ...defaults]).slice(0, 8);
 }
@@ -1012,6 +1041,8 @@ function displayPersonName(name = "") {
   if (normalized.includes("babis")) return "Andrej Babiš";
   if (normalized.includes("bartos")) return "Ivan Bartoš";
   if (normalized === "fiala") return "Fiala";
+  if (normalized === "krpalek") return "Krpálek";
+  if (normalized === "nemec") return "Němec";
   if (normalized.includes("petr fiala")) return "Petr Fiala";
   if (normalized.includes("radim fiala")) return "Radim Fiala";
   return trimmed
@@ -1033,6 +1064,14 @@ function initialsFor(name = "") {
 function shortProfileFallback(name, records = []) {
   const sources = records.length ? `${records.length} dohledaných zdrojů` : "veřejně dostupné zdroje";
   return `${name} je hledaná veřejně známá osoba. Profil slouží jen k orientaci; níže jsou řazeny ${sources}, citace a souvislosti k zadanému tématu.`;
+}
+
+function looksLikeDisambiguation(text = "") {
+  const normalized = stripDiacritics(text).toLowerCase();
+  return normalized.includes("nosi vice osobnosti")
+    || normalized.includes("muze oznacovat")
+    || normalized.includes("vice osobnosti")
+    || normalized.includes("rozcestnik");
 }
 
 function personCandidatesFor(query = "") {
@@ -1097,6 +1136,7 @@ function renderPersonCandidates(candidates = [], currentName = "") {
     button.type = "button";
     button.className = "candidate-card";
     button.dataset.person = candidate.name;
+    button.dataset.context = candidate.context || "";
     button.classList.toggle("is-active", stripDiacritics(candidate.name).toLowerCase() === stripDiacritics(currentName).toLowerCase());
 
     avatar.className = "candidate-avatar";
@@ -1194,6 +1234,10 @@ function renderPersonProfile(filters, records = []) {
 
   loadPublicPersonProfile(displayName).then((profile) => {
     if (!profile || personName.textContent !== displayName) return;
+    if (looksLikeDisambiguation(profile.description)) {
+      personDescription.textContent = `Zadané jméno vypadá jako rozcestník. Vyberte konkrétní veřejnou osobu, aby se výsledky nepletly mezi více lidmi.`;
+      return;
+    }
     if (profile.imageUrl) setPersonAvatar(displayName, profile.imageUrl);
     if (profile.description) {
       const firstSentence = profile.description.split(/(?<=[.!?])\s+/u).slice(0, 2).join(" ");
@@ -1766,6 +1810,9 @@ personCandidates.addEventListener("click", (event) => {
   }
 
   personInput.value = button.dataset.person;
+  if (button.dataset.context) {
+    personContextInput.value = button.dataset.context;
+  }
   form.requestSubmit();
 });
 
@@ -1789,6 +1836,7 @@ form.addEventListener("submit", async (event) => {
 
 sampleButton.addEventListener("click", () => {
   personInput.value = "Andrej Babiš";
+  personContextInput.value = "ANO Agrofert";
   quoteInput.value = "obilí z Ukrajiny";
   keywordsInput.value = "obilí Ukrajina";
   dateFromInput.value = "2010-01-01";
@@ -1821,6 +1869,7 @@ clearButton.addEventListener("click", () => {
   emptyState.classList.remove("hidden");
   renderSourceLinks({
     person: "Veřejná osoba",
+    personContext: "",
     exactQuote: "",
     keywords: "klíčová slova",
     dateFrom: "",
@@ -1832,6 +1881,7 @@ clearButton.addEventListener("click", () => {
 
 renderSourceLinks({
   person: "Veřejná osoba",
+  personContext: "",
   exactQuote: "",
   keywords: "klíčová slova",
   dateFrom: "",

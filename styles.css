@@ -249,6 +249,24 @@ textarea {
   resize: vertical;
 }
 
+.advanced-field {
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius);
+  padding: 0.72rem;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.advanced-field summary {
+  cursor: pointer;
+  color: #f8fafc;
+  font-weight: 900;
+}
+
+.advanced-field label {
+  display: block;
+  margin-top: 0.72rem;
+}
+
 select {
   cursor: pointer;
 }
