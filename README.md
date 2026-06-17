@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.22-person-context-field` ze dne `2026-06-17`.
+Aktuální verze: `0.3.23-deeper-source-search` ze dne `2026-06-17`.
 
 ## Cíl
 
