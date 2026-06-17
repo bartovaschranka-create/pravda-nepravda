@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.3-source-extracts` ze dne `2026-06-17`.
+Aktuální verze: `0.3.4-cache-busted-newsroom` ze dne `2026-06-17`.
 
 ## Cíl
 

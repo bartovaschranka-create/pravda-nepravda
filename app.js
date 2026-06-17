@@ -39,7 +39,7 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.3";
+const APP_VERSION = "0.3.4";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
