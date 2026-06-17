@@ -39,7 +39,7 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.14";
+const APP_VERSION = "0.3.16";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
@@ -867,20 +867,90 @@ function statementCount(records) {
   return records.filter((record) => record.statementQuote || record.type === "Rozhovor").length;
 }
 
-function renderPersonProfile(filters) {
-  const name = filters.person.trim();
-  const initials = name
+function displayPersonName(name = "") {
+  const trimmed = name.trim();
+  const normalized = stripDiacritics(trimmed).toLowerCase();
+  if (normalized.includes("babis")) return "Andrej Babiš";
+  if (normalized.includes("bartos")) return "Ivan Bartoš";
+  if (normalized.includes("fiala")) return "Petr Fiala";
+  return trimmed
+    .split(/\s+/)
+    .map((part) => part ? `${part[0].toUpperCase()}${part.slice(1)}` : "")
+    .join(" ");
+}
+
+function initialsFor(name = "") {
+  return name
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0])
     .join("")
     .toUpperCase();
+}
 
-  personAvatar.textContent = initials || "?";
-  personName.textContent = name;
-  personDescription.textContent = "Veřejně známá osoba uvedená v hledání.";
+function shortProfileFallback(name, records = []) {
+  const sources = records.length ? `${records.length} dohledaných zdrojů` : "veřejně dostupné zdroje";
+  return `${name} je hledaná veřejně známá osoba. Profil slouží jen k orientaci; níže jsou řazeny ${sources}, citace a souvislosti k zadanému tématu.`;
+}
+
+async function loadPublicPersonProfile(name) {
+  if (!name || window.location.protocol === "file:") return null;
+
+  try {
+    const response = await fetch(`https://cs.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name.replace(/\s+/g, "_"))}`, {
+      headers: { Accept: "application/json" }
+    });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return {
+      description: cleanDisplayText(data.extract || data.description || ""),
+      imageUrl: data.thumbnail?.source || data.originalimage?.source || ""
+    };
+  } catch {
+    return null;
+  }
+}
+
+function setPersonAvatar(name, imageUrl = "") {
+  personAvatar.replaceChildren();
+
+  if (imageUrl) {
+    const image = document.createElement("img");
+    image.src = imageUrl;
+    image.alt = name;
+    image.loading = "lazy";
+    image.referrerPolicy = "no-referrer";
+    image.addEventListener("error", () => {
+      personAvatar.replaceChildren(initialsFor(name) || "?");
+      personAvatar.classList.remove("has-photo");
+    }, { once: true });
+    personAvatar.append(image);
+    personAvatar.classList.add("has-photo");
+    return;
+  }
+
+  personAvatar.textContent = initialsFor(name) || "?";
+  personAvatar.classList.remove("has-photo");
+}
+
+function renderPersonProfile(filters, records = []) {
+  const name = filters.person.trim();
+  const displayName = displayPersonName(name);
+
+  setPersonAvatar(displayName);
+  personName.textContent = displayName;
+  personDescription.textContent = shortProfileFallback(displayName, records);
   personProfile.classList.toggle("hidden", !name);
+
+  loadPublicPersonProfile(displayName).then((profile) => {
+    if (!profile || personName.textContent !== displayName) return;
+    if (profile.imageUrl) setPersonAvatar(displayName, profile.imageUrl);
+    if (profile.description) {
+      const firstSentence = profile.description.split(/(?<=[.!?])\s+/u).slice(0, 2).join(" ");
+      personDescription.textContent = cleanDisplayText(firstSentence).slice(0, 260);
+    }
+  });
 }
 
 function excerptFor(record) {
@@ -952,6 +1022,23 @@ function setAiStatus(message, state = "") {
   aiStatus.classList.toggle("hidden", !message);
 }
 
+function decodeHtmlEntities(value = "") {
+  const textarea = document.createElement("textarea");
+  textarea.innerHTML = String(value);
+  return textarea.value;
+}
+
+function cleanDisplayText(value = "") {
+  return decodeHtmlEntities(value)
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function cleanDisplayList(value) {
+  return Array.isArray(value) ? value.map(cleanDisplayText).filter(Boolean) : [];
+}
+
 function normalizeAiRecord(record, index) {
   return {
     date: record.date || "",
@@ -977,6 +1064,27 @@ function normalizeAiRecord(record, index) {
     searchUrl: record.searchUrl || "",
     isLiveResult: Boolean(record.isLiveResult),
     isConcreteArticle: Boolean(record.isLiveResult && (record.directUrl || record.url))
+  };
+}
+
+function cleanNormalizedRecord(record) {
+  return {
+    ...record,
+    dateLabel: cleanDisplayText(record.dateLabel),
+    type: cleanDisplayText(record.type),
+    title: cleanDisplayText(record.title),
+    source: cleanDisplayText(record.source),
+    tags: cleanDisplayList(record.tags),
+    matchedTerm: cleanDisplayText(record.matchedTerm),
+    matchLabel: cleanDisplayText(record.matchLabel),
+    quote: cleanDisplayText(record.quote),
+    excerpt: cleanDisplayText(record.excerpt),
+    contextExcerpt: cleanDisplayText(record.contextExcerpt),
+    relevance: cleanDisplayText(record.relevance),
+    sourceBrief: cleanDisplayList(record.sourceBrief),
+    timeContext: cleanDisplayText(record.timeContext),
+    scoreLabel: cleanDisplayText(record.scoreLabel),
+    statementQuote: cleanDisplayText(record.statementQuote)
   };
 }
 
@@ -1027,6 +1135,7 @@ async function fetchAiRecords(filters) {
     return records
       .slice(0, RESULT_LIMIT)
       .map(normalizeAiRecord)
+      .map(cleanNormalizedRecord)
       .filter(hasConcreteArticleUrl);
   } catch (error) {
     setAiStatus("Živé výtahy se teď nepodařilo načíst. Zkontrolujte, že aplikace běží přes lokální server a že je nastavený klíč BRAVE_SEARCH_API_KEY.", "is-warning");
@@ -1245,7 +1354,7 @@ function renderStatements(records) {
   statementsList.replaceChildren();
 
   const statements = records
-    .filter((record) => record.statementQuote || record.type === "Rozhovor")
+    .filter((record) => record.statementQuote || record.quote || record.excerpt || record.type === "Rozhovor")
     .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")))
     .slice(0, 8);
 
@@ -1254,8 +1363,8 @@ function renderStatements(records) {
     const title = document.createElement("strong");
     const note = document.createElement("p");
     empty.className = "statement-item";
-    title.textContent = "Zatím nejsou doplněné konkrétní citace.";
-    note.textContent = "Jakmile budou k tématu dostupné výroky stejné osoby, zobrazí se zde chronologicky.";
+    title.textContent = "Zatím nejsou k dispozici použitelné výňatky.";
+    note.textContent = "Jakmile vyhledávání vrátí články se snippetem nebo citací, zobrazí se zde chronologický přehled pasáží ze zdrojů.";
     empty.append(title, note);
     statementsList.append(empty);
     statementsSection.classList.remove("hidden");
@@ -1268,7 +1377,7 @@ function renderStatements(records) {
     const quote = document.createElement("p");
     const year = record.date ? new Date(`${record.date}T12:00:00`).getFullYear() : "bez data";
     item.className = "statement-item";
-    title.textContent = String(year);
+    title.textContent = `${year} · ${record.source}`;
     quote.textContent = record.statementQuote || record.quote || excerptFor(record) || "Výňatek zatím není doplněn";
     item.append(title, quote);
     statementsList.append(item);
@@ -1277,10 +1386,45 @@ function renderStatements(records) {
   statementsSection.classList.remove("hidden");
 }
 
+function yearCounts(records) {
+  const counts = new Map();
+  records.forEach((record) => {
+    if (!record.date) return;
+    const year = new Date(`${record.date}T12:00:00`).getFullYear();
+    if (!Number.isNaN(year)) counts.set(year, (counts.get(year) || 0) + 1);
+  });
+  return counts;
+}
+
+function strongestYearText(records) {
+  const counts = yearCounts(records);
+  if (!counts.size) return "";
+  const [year, count] = [...counts.entries()].sort((a, b) => b[1] - a[1] || b[0] - a[0])[0];
+  return `Nejvíce dohledaných textů je zatím z roku ${year} (${count}).`;
+}
+
+function debateDevelopmentText(filters, records) {
+  const period = periodFromRecords(records);
+  const datedRecords = records.filter((record) => record.date).sort((a, b) => String(a.date).localeCompare(String(b.date)));
+  const first = datedRecords[0];
+  const last = datedRecords[datedRecords.length - 1];
+  const sourceTypes = uniqueTerms(records.map((record) => record.type).filter(Boolean)).slice(0, 4).join(", ").toLowerCase();
+  const highlight = strongestYearText(records);
+  const person = displayPersonName(filters.person);
+
+  if (!records.length) {
+    return `K tématu "${filters.keywords}" u osoby ${person} zatím nejsou v tomto výběru konkrétní články. Zkuste rozšířit téma nebo odstranit filtr zdroje a období.`;
+  }
+
+  if (first && last && first !== last) {
+    return `K tématu "${filters.keywords}" u osoby ${person} se podařilo dohledat zdroje z období ${period}; první zachycený text je z roku ${new Date(`${first.date}T12:00:00`).getFullYear()}, poslední z roku ${new Date(`${last.date}T12:00:00`).getFullYear()}. ${highlight} Výňatky níže ukazují, jak se v čase měnily důrazy veřejné debaty a citované formulace.`;
+  }
+
+  return `K tématu "${filters.keywords}" u osoby ${person} je zatím k dispozici ${records.length} zdrojů typu ${sourceTypes || "články a rozhovory"}. ${highlight || "Časové srovnání bude přesnější po doplnění dalších datovaných zdrojů."} Níže jsou nejdřív zdroje, které nejvíc pomáhají pochopit kontext.`;
+}
+
 function renderSummary(filters, records) {
-  const period = describePeriod(filters);
-  const types = records.length ? [...new Set(records.map((record) => record.type.toLowerCase()))].join(", ") : "žádné zdroje";
-  summaryText.textContent = `Přehled ukazuje veřejně dostupné zdroje k tématu "${filters.keywords}" a osobě ${filters.person} v období ${period}. Nahoře jsou hlavní články a dokumenty, níže archivní a doplňující materiály.`;
+  summaryText.textContent = debateDevelopmentText(filters, records);
   summaryCard.classList.remove("hidden");
 }
 
@@ -1289,7 +1433,7 @@ function runSearch(filters, records = sampleRecords) {
   const filteredRecords = filterRecords(records, filters);
   resultTitle.textContent = `${filters.person}: ${filters.keywords}`;
   renderSourceLinks(filters);
-  renderPersonProfile(filters);
+  renderPersonProfile(filters, filteredRecords);
   renderTopicIntro(filters, filteredRecords);
   renderRecommended(filteredRecords);
   renderYearFilter(filteredRecords, filters);

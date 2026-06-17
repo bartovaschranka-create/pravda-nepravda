@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const APP_VERSION = "0.3.14";
+const APP_VERSION = "0.3.16";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const files = {
   html: "index.html",
@@ -84,6 +84,13 @@ assert((await text(files.api)).includes("extractPublishedDate"), "Backend neumí
 assert((await text(files.api)).includes("SOURCE_PRIORITY_DOMAINS"), "Backend nezvýhodňuje seriózní redakční zdroje.");
 assert((await text(files.api)).includes("relatedOrganizationTerms"), "Backend nehledá souvislosti firem a organizací spojených s osobou.");
 assert((await text(files.api)).includes("replace(/<[^>]+>/g"), "Backend nečistí HTML tagy ve výňatcích.");
+assert((await text(files.api)).includes("&lt;"), "Backend nedekóduje escapované HTML tagy ve výňatcích.");
+assert(app.includes("cleanNormalizedRecord"), "Frontend nemá pojistku proti HTML tagům v datech z API.");
+assert(app.includes("cleanDisplayText"), "Frontend neumí čistit zobrazovaný text.");
+assert(app.includes("loadPublicPersonProfile"), "Frontend neumí dohledat veřejný profil osoby.");
+assert(app.includes("debateDevelopmentText"), "Shrnutí v čase je pořád jen obecná formulace.");
+assert(app.includes("statementQuote || record.quote || record.excerpt"), "Chronologie citací neumí použít výňatky ze zdrojů.");
+assert(styles.includes(".person-avatar img"), "Chybí styl pro veřejnou fotografii osoby.");
 assert(styles.includes("blockquote.is-missing"), "Chybí vizuální styl pro nedoplněný výňatek.");
 assert(styles.includes("--year-intensity"), "Chybí vizuální intenzita roků v časové ose.");
 assert(styles.includes("source-summary"), "Chybí styl pro viditelný souhrn zdrojů.");

@@ -926,6 +926,21 @@ time {
   background: var(--paper);
 }
 
+.person-avatar {
+  overflow: hidden;
+}
+
+.person-avatar.has-photo {
+  background: #ffffff;
+}
+
+.person-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
 .statement-item {
   border-left: 4px solid var(--teal);
   padding-left: 0.78rem;

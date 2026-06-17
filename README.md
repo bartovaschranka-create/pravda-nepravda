@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.14-source-quality` ze dne `2026-06-17`.
+Aktuální verze: `0.3.16-person-context` ze dne `2026-06-17`.
 
 ## Cíl
 
