@@ -19,6 +19,7 @@ const personProfile = document.querySelector("#person-profile");
 const personAvatar = document.querySelector("#person-avatar");
 const personName = document.querySelector("#person-name");
 const personDescription = document.querySelector("#person-description");
+const personStanceSummary = document.querySelector("#person-stance-summary");
 const personCandidates = document.querySelector("#person-candidates");
 const topicIntro = document.querySelector("#topic-intro");
 const topicIntroTitle = document.querySelector("#topic-intro-title");
@@ -28,6 +29,7 @@ const recommendedSection = document.querySelector("#recommended-section");
 const recommendedList = document.querySelector("#recommended-list");
 const yearSection = document.querySelector("#year-section");
 const yearFilter = document.querySelector("#year-filter");
+const yearChangeDetail = document.querySelector("#year-change-detail");
 const relatedSection = document.querySelector("#related-section");
 const relatedTopics = document.querySelector("#related-topics");
 const statementsSection = document.querySelector("#statements-section");
@@ -40,7 +42,7 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.18";
+const APP_VERSION = "0.3.19";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
@@ -852,6 +854,53 @@ function stanceSignalFor(record) {
   return "";
 }
 
+function stanceSignalLabel(signal) {
+  if (signal === "contrast") return "pasáž naznačuje kontrast mezi dřívější a pozdější formulací";
+  if (signal === "mixed") return "ve stejném období se objevují podpůrné i odmítavé formulace";
+  if (signal === "support") return "pasáž působí jako souhlasná nebo prosazující formulace";
+  if (signal === "oppose") return "pasáž působí jako odmítavá nebo kritická formulace";
+  return "pasáž doplňuje časový kontext";
+}
+
+function recordYear(record) {
+  if (!record.date) return null;
+  const year = new Date(`${record.date}T12:00:00`).getFullYear();
+  return Number.isNaN(year) ? null : year;
+}
+
+function stanceRecordsForYear(records, year) {
+  return records
+    .filter((record) => recordYear(record) === Number(year))
+    .map((record) => ({
+      record,
+      signal: stanceSignalFor(record),
+      excerpt: excerptFor(record) || record.contextExcerpt || record.relevance || ""
+    }))
+    .filter((item) => item.signal || item.excerpt)
+    .slice(0, 4);
+}
+
+function stanceSummaryItems(records) {
+  const items = records
+    .filter((record) => record.date && (record.statementQuote || record.quote || record.excerpt))
+    .sort((a, b) => String(a.date).localeCompare(String(b.date)))
+    .map((record) => ({
+      year: recordYear(record),
+      date: record.date,
+      source: record.source,
+      signal: stanceSignalFor(record),
+      excerpt: excerptFor(record)
+    }))
+    .filter((item) => item.year && item.excerpt);
+
+  const byYear = new Map();
+  items.forEach((item) => {
+    if (!byYear.has(item.year)) byYear.set(item.year, item);
+  });
+
+  return [...byYear.values()].slice(0, 5);
+}
+
 function stanceShiftYears(records) {
   const byYear = new Map();
 
@@ -1076,6 +1125,33 @@ function renderPersonCandidates(candidates = [], currentName = "") {
   personCandidates.classList.remove("hidden");
 }
 
+function renderPersonStanceSummary(records = []) {
+  personStanceSummary.replaceChildren();
+  const items = stanceSummaryItems(records);
+
+  if (!items.length) {
+    personStanceSummary.classList.add("hidden");
+    return;
+  }
+
+  const title = document.createElement("strong");
+  const list = document.createElement("ol");
+  title.textContent = "Postoje a formulace v čase";
+
+  items.forEach((item) => {
+    const li = document.createElement("li");
+    const meta = document.createElement("span");
+    const text = document.createElement("p");
+    meta.textContent = `${formatDate(item.date)} · ${item.source}${item.signal ? ` · ${stanceSignalLabel(item.signal)}` : ""}`;
+    text.textContent = item.excerpt;
+    li.append(meta, text);
+    list.append(li);
+  });
+
+  personStanceSummary.append(title, list);
+  personStanceSummary.classList.remove("hidden");
+}
+
 function setPersonAvatar(name, imageUrl = "") {
   personAvatar.replaceChildren();
 
@@ -1109,6 +1185,7 @@ function renderPersonProfile(filters, records = []) {
     ? `Zadané jméno může odpovídat více veřejným osobám. Vyberte konkrétní profil, aby se výsledky nepletly mezi různé osoby.`
     : shortProfileFallback(displayName, records);
   renderPersonCandidates(candidates, displayName);
+  renderPersonStanceSummary(candidates.length > 1 ? [] : records);
   personProfile.classList.toggle("hidden", !name);
 
   if (candidates.length > 1) {
@@ -1490,6 +1567,8 @@ function renderRecommended(records) {
 
 function renderYearFilter(records, filters) {
   yearFilter.replaceChildren();
+  yearChangeDetail.replaceChildren();
+  yearChangeDetail.classList.add("hidden");
 
   yearStatsFor(records).forEach(({ year, count, intensity, stanceShift, undated }) => {
     const button = document.createElement("button");
@@ -1507,6 +1586,35 @@ function renderYearFilter(records, filters) {
   });
 
   yearSection.classList.remove("hidden");
+}
+
+function renderYearChangeDetail(year, records) {
+  yearChangeDetail.replaceChildren();
+
+  const details = stanceRecordsForYear(records, year);
+  if (!details.length) {
+    yearChangeDetail.classList.add("hidden");
+    return;
+  }
+
+  const title = document.createElement("strong");
+  const note = document.createElement("p");
+  const list = document.createElement("ul");
+  title.textContent = `Co ukazuje rok ${year}`;
+  note.textContent = "Níže jsou pasáže, kvůli kterým je rok označen jako možný posun ve formulaci nebo postoji. Nejde o verdikt, jen o vodítko k přečtení zdrojů.";
+
+  details.forEach(({ record, signal, excerpt }) => {
+    const item = document.createElement("li");
+    const meta = document.createElement("span");
+    const text = document.createElement("p");
+    meta.textContent = `${record.date ? formatDate(record.date) : "datum nezjištěno"} · ${record.source} · ${stanceSignalLabel(signal)}`;
+    text.textContent = excerpt;
+    item.append(meta, text);
+    list.append(item);
+  });
+
+  yearChangeDetail.append(title, note, list);
+  yearChangeDetail.classList.remove("hidden");
 }
 
 function renderRelatedTopics(filters) {
@@ -1549,9 +1657,9 @@ function renderStatements(records) {
     const item = document.createElement("div");
     const title = document.createElement("strong");
     const quote = document.createElement("p");
-    const year = record.date ? new Date(`${record.date}T12:00:00`).getFullYear() : "bez data";
+    const published = record.date ? formatDate(record.date) : "datum nezjištěno";
     item.className = "statement-item";
-    title.textContent = `${year} · ${record.source}`;
+    title.textContent = `${published} · ${record.source}`;
     quote.textContent = record.statementQuote || record.quote || excerptFor(record) || "Výňatek zatím není doplněn";
     item.append(title, quote);
     statementsList.append(item);
@@ -1626,9 +1734,19 @@ yearFilter.addEventListener("click", (event) => {
   }
 
   const year = button.dataset.year;
+  const baseRecords = currentRecords.length ? currentRecords : buildGeneratedRecords(collectFilters());
+  if (button.classList.contains("has-stance-shift")) {
+    renderYearChangeDetail(year, baseRecords);
+  } else {
+    yearChangeDetail.replaceChildren();
+    yearChangeDetail.classList.add("hidden");
+  }
   dateFromInput.value = `${year}-01-01`;
   dateToInput.value = `${year}-12-31`;
-  runSearch(collectFilters(), currentRecords.length ? currentRecords : buildGeneratedRecords(collectFilters()));
+  runSearch(collectFilters(), baseRecords);
+  if (button.classList.contains("has-stance-shift")) {
+    renderYearChangeDetail(year, baseRecords);
+  }
 });
 
 relatedTopics.addEventListener("click", (event) => {
@@ -1689,6 +1807,11 @@ clearButton.addEventListener("click", () => {
   resultTitle.textContent = "Zadejte osobu, výrok a téma";
   summaryCard.classList.add("hidden");
   topicIntro.classList.add("hidden");
+  personProfile.classList.add("hidden");
+  personStanceSummary.replaceChildren();
+  personCandidates.replaceChildren();
+  yearChangeDetail.replaceChildren();
+  yearChangeDetail.classList.add("hidden");
   recommendedSection.classList.add("hidden");
   yearSection.classList.add("hidden");
   relatedSection.classList.add("hidden");

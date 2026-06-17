@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.18-person-disambiguation` ze dne `2026-06-17`.
+Aktuální verze: `0.3.19-stance-detail` ze dne `2026-06-17`.
 
 ## Cíl
 

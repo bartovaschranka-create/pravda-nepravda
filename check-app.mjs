@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const APP_VERSION = "0.3.18";
+const APP_VERSION = "0.3.19";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const files = {
   html: "index.html",
@@ -95,8 +95,13 @@ assert(app.includes("has-stance-shift"), "Roky neumí zobrazit marker možného 
 assert(app.includes("PERSON_CANDIDATES"), "Frontend neumí nabídnout více kandidátů při shodném příjmení.");
 assert(app.includes("personCandidatesFor"), "Frontend neumí vyhodnotit nejednoznačnou osobu.");
 assert(app.includes("button.dataset.person"), "Klik na kandidáta neumí upřesnit hledanou osobu.");
+assert(app.includes("personStanceSummary"), "Profil osoby neumí zobrazit stručný soupis postojů v čase.");
+assert(app.includes("renderYearChangeDetail"), "Klik na rok neumí zobrazit, v čem je naznačený posun.");
+assert(app.includes("formatDate(record.date)"), "Chronologie citací nezobrazuje datum vydání článku.");
 assert(styles.includes(".person-avatar img"), "Chybí styl pro veřejnou fotografii osoby.");
 assert(styles.includes(".candidate-card"), "Chybí styl pro výběr více možných osob.");
+assert(styles.includes(".person-stance-summary"), "Chybí styl pro soupis postojů v profilu.");
+assert(styles.includes(".year-change-detail"), "Chybí styl pro detail označeného roku.");
 assert(styles.includes(".year-chip.has-stance-shift"), "Chybí styl pro marker možné změny postoje na časové ose.");
 assert(styles.includes("blockquote.is-missing"), "Chybí vizuální styl pro nedoplněný výňatek.");
 assert(styles.includes("--year-intensity"), "Chybí vizuální intenzita roků v časové ose.");
