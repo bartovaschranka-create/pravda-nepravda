@@ -39,7 +39,7 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.6";
+const APP_VERSION = "0.3.8";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
@@ -174,6 +174,86 @@ const searchTargets = [
     build: (query) => `https://search.seznam.cz/?q=${query}`
   },
   {
+    label: "Seznam Zprávy",
+    type: "Článek",
+    priority: 91,
+    group: "top",
+    tags: ["Článek", "Analýza"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Aseznamzpravy.cz${dates.google}`
+  },
+  {
+    label: "Aktuálně.cz",
+    type: "Článek",
+    priority: 89,
+    group: "top",
+    tags: ["Článek", "Archiv"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Aaktualne.cz${dates.google}`
+  },
+  {
+    label: "Deník N",
+    type: "Článek",
+    priority: 88,
+    group: "top",
+    tags: ["Článek", "Analýza"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Adenikn.cz${dates.google}`
+  },
+  {
+    label: "Hospodářské noviny",
+    type: "Článek",
+    priority: 87,
+    group: "top",
+    tags: ["Článek", "Ekonomika"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Ahn.cz+OR+site%3Aihned.cz${dates.google}`
+  },
+  {
+    label: "Respekt",
+    type: "Investigativní web",
+    priority: 86,
+    group: "top",
+    tags: ["Investigativa", "Analýza"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Arespekt.cz${dates.google}`
+  },
+  {
+    label: "Český rozhlas",
+    type: "Rozhovor",
+    priority: 85,
+    group: "top",
+    tags: ["Rozhovor", "Rozhlas"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Arozhlas.cz+OR+site%3Aplus.rozhlas.cz${dates.google}`
+  },
+  {
+    label: "Česká televize archiv",
+    type: "Rozhovor",
+    priority: 84,
+    group: "top",
+    tags: ["Televize", "Video", "Archiv"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Aceskatelevize.cz${dates.google}`
+  },
+  {
+    label: "Ministerstva a úřady",
+    type: "Tisková zpráva",
+    priority: 83,
+    group: "official",
+    tags: ["Tisková zpráva", "Oficiální dokument"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Avlada.gov.cz+OR+site%3Amvcr.cz+OR+site%3Ammr.gov.cz+OR+site%3Amfcr.cz${dates.google}`
+  },
+  {
+    label: "Soudy a justice",
+    type: "Tisková zpráva",
+    priority: 81,
+    group: "official",
+    tags: ["Soud", "Oficiální dokument"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Ajustice.cz+OR+site%3Ausoud.cz+OR+site%3Ansoud.cz${dates.google}`
+  },
+  {
+    label: "Kontrolní a veřejné databáze",
+    type: "Tisková zpráva",
+    priority: 80,
+    group: "official",
+    tags: ["Oficiální dokument", "Databáze"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Anku.cz+OR+site%3Auohs.cz+OR+site%3Ahlidacstatu.cz${dates.google}`
+  },
+  {
     label: "Parlamentní a veřejné databáze",
     type: "Tisková zpráva",
     priority: 90,
@@ -212,6 +292,38 @@ const searchTargets = [
     group: "top",
     tags: ["Investigativa", "Archiv", "Soud", "Policie"],
     build: (query, dates) => `https://www.google.com/search?q=${query}+investigace+OR+anal%C3%BDza+OR+dokumenty+site%3Ainvestigace.cz+OR+site%3Ahlidacipes.org+OR+site%3Arespekt.cz${dates.google}`
+  },
+  {
+    label: "Investigace.cz",
+    type: "Investigativní web",
+    priority: 84,
+    group: "investigative",
+    tags: ["Investigativa", "Dokumenty"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Ainvestigace.cz${dates.google}`
+  },
+  {
+    label: "HlídacíPes.org",
+    type: "Investigativní web",
+    priority: 82,
+    group: "investigative",
+    tags: ["Investigativa", "Analýza"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Ahlidacipes.org${dates.google}`
+  },
+  {
+    label: "Odborné a profesní zdroje",
+    type: "Článek",
+    priority: 64,
+    group: "archive",
+    tags: ["Článek", "Odborný zdroj"],
+    build: (query, dates) => `https://www.google.com/search?q=${query}+site%3Aceska-justice.cz+OR+site%3Aekonomickydenik.cz+OR+site%3Alupa.cz${dates.google}`
+  },
+  {
+    label: "Internet Archive / starší web",
+    type: "Článek",
+    priority: 62,
+    group: "archive",
+    tags: ["Archiv"],
+    build: (query) => `https://web.archive.org/web/*/${query}`
   },
   {
     label: "Archiv starších článků",
@@ -371,6 +483,17 @@ function buildDateOperators(filters) {
   };
 }
 
+function sourceGroupRank(group) {
+  const ranks = {
+    top: 0,
+    investigative: 1,
+    official: 2,
+    archive: 3
+  };
+
+  return ranks[group] ?? 4;
+}
+
 function describePeriod(filters) {
   if (!filters.dateFrom && !filters.dateTo) {
     return "od začátku veřejně dostupného webu do současnosti";
@@ -449,7 +572,7 @@ function buildGeneratedRecords(filters) {
     }));
   }))
     .sort((a, b) => {
-      const groupDiff = (a.sourceGroup === "top" ? 0 : 1) - (b.sourceGroup === "top" ? 0 : 1);
+      const groupDiff = sourceGroupRank(a.sourceGroup) - sourceGroupRank(b.sourceGroup);
       return groupDiff || b.relevanceScore - a.relevanceScore;
     })
     .slice(0, RESULT_LIMIT);
@@ -629,6 +752,25 @@ function yearsFor(records) {
     .filter(Boolean);
 
   return years.length ? [...new Set(years)].sort((a, b) => a - b) : DEFAULT_YEARS;
+}
+
+function yearStatsFor(records) {
+  const counts = new Map();
+
+  records.forEach((record) => {
+    if (!record.date) return;
+    const year = new Date(`${record.date}T12:00:00`).getFullYear();
+    if (!Number.isNaN(year)) counts.set(year, (counts.get(year) || 0) + 1);
+  });
+
+  const years = counts.size ? [...counts.keys()].sort((a, b) => a - b) : DEFAULT_YEARS;
+  const max = Math.max(1, ...years.map((year) => counts.get(year) || 0));
+
+  return years.map((year) => ({
+    year,
+    count: counts.get(year) || 0,
+    intensity: (counts.get(year) || 0) / max
+  }));
 }
 
 function recordUrl(record) {
@@ -863,7 +1005,7 @@ function renderTimeline(records) {
   records
     .slice()
     .sort((a, b) => {
-      const groupDiff = (a.sourceGroup === "top" ? 0 : 1) - (b.sourceGroup === "top" ? 0 : 1);
+      const groupDiff = sourceGroupRank(a.sourceGroup) - sourceGroupRank(b.sourceGroup);
       return groupDiff || (b.relevanceScore || 0) - (a.relevanceScore || 0);
     })
     .forEach((record) => {
@@ -980,13 +1122,15 @@ function renderRecommended(records) {
 function renderYearFilter(records, filters) {
   yearFilter.replaceChildren();
 
-  yearsFor(records).forEach((year) => {
+  yearStatsFor(records).forEach(({ year, count, intensity }) => {
     const button = document.createElement("button");
     const isActive = filters.dateFrom === `${year}-01-01` && filters.dateTo === `${year}-12-31`;
     button.type = "button";
     button.className = `year-chip ${isActive ? "is-active" : ""}`.trim();
     button.dataset.year = String(year);
-    button.textContent = String(year);
+    button.style.setProperty("--year-intensity", String(Math.max(0.08, intensity)));
+    button.title = count ? `${year}: ${count} zdrojů` : `${year}: zatím bez datovaných zdrojů`;
+    button.innerHTML = `<span>${year}</span><small>${count ? `${count} zdrojů` : "bez dat"}</small>`;
     yearFilter.append(button);
   });
 

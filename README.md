@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.6-visible-excerpts` ze dne `2026-06-17`.
+Aktuální verze: `0.3.8-source-coverage-timeline-density` ze dne `2026-06-17`.
 
 ## Cíl
 
@@ -25,6 +25,7 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - dlouhé výňatky se v náhledu automaticky zkrátí, aby karta ukazovala jen zásadní část a ne celý článek,
 - volitelné napojení `/api/research`, které dohledá zdroje, načte veřejně dostupný text článku a vrátí krátké citace, výňatky a body `sourceBrief`,
 - časová osa zdrojů,
+- časová osa ukazuje počet datovaných zdrojů v jednotlivých letech, aby bylo vidět období zvýšené mediální pozornosti,
 - krátké neutrální shrnutí souvislostí.
 
 ## Právní a obsahové zásady
@@ -76,3 +77,13 @@ http://localhost:4173
 ```
 
 Pro skutečné hledání v médiích je potřeba proměnná `BRAVE_SEARCH_API_KEY`. Bez ní aplikace dál zobrazí rozšířené odkazy a připravené redakční vodítko.
+
+## Kontrola před předáním
+
+Po každé úpravě spusťte:
+
+```bat
+zkontrolovat.bat
+```
+
+Kontrola ověřuje verzi v UI, cache-busting u CSS/JS, syntaxi JavaScriptu, viditelný fallback výňatku a zakázané hodnotící formulace.
