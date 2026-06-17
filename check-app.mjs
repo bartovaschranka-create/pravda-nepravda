@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const APP_VERSION = "0.3.10";
+const APP_VERSION = "0.3.14";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const files = {
   html: "index.html",
@@ -71,8 +71,19 @@ assert(app.includes("Prohledává se"), "Chybí viditelný souhrn počtu prohled
 assert(app.includes("bez-data"), "Chybí zobrazení zdrojů bez dohledaného data na časové ose.");
 assert(app.includes("Celý článek"), "Přímý odkaz na konkrétní článek nemá správný text.");
 assert(app.includes("isLiveResult"), "Chybí rozlišení konkrétních živých výsledků z API.");
+assert(app.includes("isConcreteArticle"), "Chybí rozlišení konkrétního článku od obecného zdroje.");
+assert(app.includes("Obecné zdrojové okruhy se jako výsledky nezobrazují"), "Chybí hláška pro prázdné konkrétní výsledky.");
 assert(app.includes("window.location.protocol === \"file:\""), "Chybí oddělení statického režimu od živého API režimu.");
+assert(app.includes("PERSON_EXPANSIONS"), "Frontend neumí rozšiřovat zadaná jména osob.");
+assert(app.includes("ukrajinské obilí"), "Frontend neumí rozšířit dotaz obilí o související výrazy.");
 assert((await text(files.api)).includes("resultSnippet"), "Backend nepoužívá Brave snippet/description jako výňatek.");
+assert((await text(files.api)).includes("BRAVE_SEARCH_API_KEY_MISSING"), "Backend nevrací jasný stav při chybějícím Brave API klíči.");
+assert((await text(files.api)).includes("rawResultsCollected"), "Backend nevrací diagnostiku konkrétních Brave výsledků.");
+assert((await text(files.api)).includes("SOURCE_QUERY_GROUPS"), "Backend nepoužívá čisté zdrojové dotazy pro Brave Search.");
+assert((await text(files.api)).includes("extractPublishedDate"), "Backend neumí vytáhnout datum publikace z HTML metadat článku.");
+assert((await text(files.api)).includes("SOURCE_PRIORITY_DOMAINS"), "Backend nezvýhodňuje seriózní redakční zdroje.");
+assert((await text(files.api)).includes("relatedOrganizationTerms"), "Backend nehledá souvislosti firem a organizací spojených s osobou.");
+assert((await text(files.api)).includes("replace(/<[^>]+>/g"), "Backend nečistí HTML tagy ve výňatcích.");
 assert(styles.includes("blockquote.is-missing"), "Chybí vizuální styl pro nedoplněný výňatek.");
 assert(styles.includes("--year-intensity"), "Chybí vizuální intenzita roků v časové ose.");
 assert(styles.includes("source-summary"), "Chybí styl pro viditelný souhrn zdrojů.");

@@ -39,10 +39,14 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.10";
+const APP_VERSION = "0.3.14";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
+  {
+    triggers: ["obili", "obiln", "ukrajinske obili"],
+    terms: ["obilí Ukrajina", "ukrajinské obilí", "dovoz obilí", "dovoz ukrajinského obilí", "zemědělství", "komodity", "potraviny Ukrajina"]
+  },
   {
     triggers: ["digitalizace", "digitalizaci", "digitalizaci stavebniho rizeni", "dsr", "portal stavebnika"],
     terms: ["digitalizace stavebního řízení", "stavební řízení", "Portál stavebníka", "DSŘ", "MMR", "Ministerstvo pro místní rozvoj"]
@@ -54,6 +58,21 @@ const TERM_EXPANSIONS = [
   {
     triggers: ["migrant", "migranti", "migrace"],
     terms: ["migrace", "uprchlík", "uprchlíci", "azylant", "azylanti"]
+  }
+];
+
+const PERSON_EXPANSIONS = [
+  {
+    triggers: ["babis", "andrej babis"],
+    names: ["Andrej Babiš", "Babiš"]
+  },
+  {
+    triggers: ["bartos", "ivan bartos"],
+    names: ["Ivan Bartoš", "Bartoš"]
+  },
+  {
+    triggers: ["fiala", "petr fiala"],
+    names: ["Petr Fiala", "Fiala"]
   }
 ];
 
@@ -456,6 +475,25 @@ function expandSearchTerms(query) {
   return uniqueTerms(terms);
 }
 
+function expandPersonTerms(person) {
+  const original = person.trim();
+  const normalized = stripDiacritics(original).toLowerCase();
+  const terms = [original];
+
+  PERSON_EXPANSIONS.forEach((entry) => {
+    if (entry.triggers.some((trigger) => normalized.includes(trigger))) {
+      terms.push(...entry.names);
+    }
+  });
+
+  const plainOriginal = stripDiacritics(original);
+  if (plainOriginal !== original) {
+    terms.push(plainOriginal);
+  }
+
+  return uniqueTerms(terms);
+}
+
 function buildSearchQuery(filters, term, person = filters.person) {
   const parts = [person, term];
 
@@ -544,7 +582,7 @@ function renderSourceLinks(filters) {
 
 function buildGeneratedRecords(filters) {
   const searchTerms = expandSearchTerms(filters.keywords);
-  const personTerms = uniqueTerms([filters.person, stripDiacritics(filters.person)]);
+  const personTerms = expandPersonTerms(filters.person);
   const dates = buildDateOperators(filters);
   const period = describePeriod(filters);
 
@@ -809,6 +847,10 @@ function recordLinkText(record) {
   return record.directUrl ? "Celý článek" : "Otevřít záložní hledání";
 }
 
+function hasConcreteArticleUrl(record) {
+  return Boolean(record.directUrl || record.url);
+}
+
 function periodFromRecords(records) {
   const years = records
     .map((record) => record.date ? new Date(`${record.date}T12:00:00`).getFullYear() : null)
@@ -933,7 +975,8 @@ function normalizeAiRecord(record, index) {
     statementQuote: record.statementQuote || "",
     directUrl: record.directUrl || record.url || "",
     searchUrl: record.searchUrl || "",
-    isLiveResult: Boolean(record.isLiveResult || record.directUrl || record.url)
+    isLiveResult: Boolean(record.isLiveResult),
+    isConcreteArticle: Boolean(record.isLiveResult && (record.directUrl || record.url))
   };
 }
 
@@ -964,6 +1007,11 @@ async function fetchAiRecords(filters) {
     });
 
     if (!response.ok) {
+      const errorPayload = await response.json().catch(() => ({}));
+      if (response.status === 503 || errorPayload.code === "BRAVE_SEARCH_API_KEY_MISSING") {
+        setAiStatus("Vyhledávání není připojené k Brave Search API. Zkontrolujte .env nebo restart serveru s BRAVE_SEARCH_API_KEY.", "is-warning");
+        return null;
+      }
       throw new Error(`Research endpoint returned ${response.status}`);
     }
 
@@ -971,12 +1019,15 @@ async function fetchAiRecords(filters) {
     const records = Array.isArray(payload.records) ? payload.records : [];
 
     if (!records.length) {
-      setAiStatus("Zdroje se nepodařilo načíst. Zůstávají zobrazené rozšířené odkazy a tématická vodítka.", "is-warning");
-      return null;
+      setAiStatus("Brave Search nevrátil žádné konkrétní články pro zadanou osobu a téma. Obecné zdrojové okruhy se jako výsledky nezobrazují.", "is-warning");
+      return [];
     }
 
     setAiStatus(`Doplněno ${Math.min(records.length, RESULT_LIMIT)} zdrojů s krátkými výňatky.`, "is-ready");
-    return records.slice(0, RESULT_LIMIT).map(normalizeAiRecord);
+    return records
+      .slice(0, RESULT_LIMIT)
+      .map(normalizeAiRecord)
+      .filter(hasConcreteArticleUrl);
   } catch (error) {
     setAiStatus("Živé výtahy se teď nepodařilo načíst. Zkontrolujte, že aplikace běží přes lokální server a že je nastavený klíč BRAVE_SEARCH_API_KEY.", "is-warning");
     return null;

@@ -7,18 +7,19 @@ import handler from "./api/research.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
+const VERSION = "0.3.14";
 
 async function loadEnvFile() {
   const envPath = path.join(__dirname, ".env");
   if (!existsSync(envPath)) return;
 
-  const content = await readFile(envPath, "utf8");
+  const content = (await readFile(envPath, "utf8")).replace(/^\uFEFF/, "");
   content.split(/\r?\n/).forEach((line) => {
     const trimmed = line.trim();
     if (!trimmed || trimmed.startsWith("#")) return;
     const index = trimmed.indexOf("=");
     if (index === -1) return;
-    const key = trimmed.slice(0, index).trim();
+    const key = trimmed.slice(0, index).trim().replace(/^\uFEFF/, "");
     const value = trimmed.slice(index + 1).trim().replace(/^["']|["']$/g, "");
     if (key && !process.env[key]) process.env[key] = value;
   });
@@ -41,7 +42,7 @@ function readBody(req) {
     const chunks = [];
     req.on("data", (chunk) => chunks.push(chunk));
     req.on("end", () => {
-      const raw = Buffer.concat(chunks).toString("utf8");
+      const raw = Buffer.concat(chunks).toString("utf8").replace(/^\uFEFF/, "");
       if (!raw) return resolve({});
 
       try {
@@ -102,7 +103,7 @@ const server = http.createServer(async (req, res) => {
       res.setHeader("Content-Type", "application/json; charset=utf-8");
       res.end(JSON.stringify({
         ok: true,
-        version: "0.3.10",
+        version: VERSION,
         braveSearchConfigured: Boolean(process.env.BRAVE_SEARCH_API_KEY)
       }));
       return;
@@ -118,7 +119,9 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(PORT, () => {
   const url = `http://localhost:${PORT}`;
-  console.log(`Archiv výroků běží na ${url}`);
-  console.log("Pro skutečné dohledávání nastavte BRAVE_SEARCH_API_KEY.");
+  console.log(`Archiv vyroku bezi na ${url}`);
+  console.log(process.env.BRAVE_SEARCH_API_KEY
+    ? "Brave Search API klic je nacteny."
+    : "Pro skutecne dohledavani nastavte BRAVE_SEARCH_API_KEY.");
   console.log(`Soubor serveru: ${pathToFileURL(path.join(__dirname, "server.mjs")).href}`);
 });

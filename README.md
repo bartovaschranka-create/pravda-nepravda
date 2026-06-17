@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.10-brave-concrete-results` ze dne `2026-06-17`.
+Aktuální verze: `0.3.14-source-quality` ze dne `2026-06-17`.
 
 ## Cíl
 
@@ -53,7 +53,7 @@ Potřebná proměnná prostředí:
 
 Po nasazení serverové části frontend automaticky zavolá `/api/research` a karty se doplní o `quote`, `excerpt`, `contextExcerpt` a konkrétní body `sourceBrief` přímo ze zdrojů. Článek se celý neukládá ani nezobrazuje.
 
-Backend používá konkrétní položky z Brave Search (`title`, `url`, `description/snippet`, dostupné datum). Karta proto reprezentuje konkrétní článek; obecné okruhy zdrojů slouží jen jako záložní odkazy.
+Backend používá konkrétní položky z Brave Search (`title`, `url`, `description/snippet`, dostupné datum). Karta proto reprezentuje konkrétní článek; obecné okruhy zdrojů slouží jen jako záložní odkazy a v živém režimu se nevykreslují jako výsledkové karty.
 
 ## Spuštění
 
