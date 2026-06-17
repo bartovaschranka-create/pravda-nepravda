@@ -39,7 +39,7 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.4";
+const APP_VERSION = "0.3.6";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
@@ -696,7 +696,8 @@ function contextExcerptFor(record) {
   const excerpt = record.excerpt && record.excerpt.trim();
 
   if (!excerpt || excerpt === quote) {
-    return "";
+    const points = Array.isArray(record.sourceBrief) ? record.sourceBrief.filter(Boolean) : [];
+    return points[0] || record.relevance || "";
   }
 
   if (excerpt.length <= EXCERPT_LIMIT) {
@@ -718,7 +719,15 @@ function quoteLabelFor(record) {
     return "Úryvek ze zdroje";
   }
 
-  return "";
+  return "Výňatek";
+}
+
+function visibleExcerptFor(record) {
+  return excerptFor(record) || "Výňatek zatím není doplněn";
+}
+
+function hasRealExcerpt(record) {
+  return Boolean((record.quote && record.quote.trim()) || (record.excerpt && record.excerpt.trim()));
 }
 
 function setAiStatus(message, state = "") {
@@ -755,7 +764,7 @@ function normalizeAiRecord(record, index) {
 
 async function fetchAiRecords(filters) {
   if (window.location.protocol === "file:") {
-    setAiStatus("Teď běží jen statická stránka. Pro automatické čtení článků a doplnění citací je potřeba spustit serverovou část /api/research.", "is-warning");
+    setAiStatus("Pro živé výtahy otevřete aplikaci přes lokální adresu http://localhost:4173. Přímé otevření souboru umí zobrazit jen rozšířené zdrojové odkazy.", "is-warning");
     return null;
   }
 
@@ -787,14 +796,14 @@ async function fetchAiRecords(filters) {
     const records = Array.isArray(payload.records) ? payload.records : [];
 
     if (!records.length) {
-      setAiStatus("Zatím se nepodařilo doplnit konkrétní citace. Zůstávají zobrazené odkazy na zdroje.", "is-warning");
+      setAiStatus("Zdroje se nepodařilo načíst. Zůstávají zobrazené rozšířené odkazy a tématická vodítka.", "is-warning");
       return null;
     }
 
     setAiStatus(`Doplněno ${Math.min(records.length, RESULT_LIMIT)} zdrojů s krátkými výňatky.`, "is-ready");
     return records.slice(0, RESULT_LIMIT).map(normalizeAiRecord);
   } catch (error) {
-    setAiStatus("Automatické čtení článků zatím není dostupné. Zobrazují se rozšířené odkazy a redakční vodítka, citace doplní serverová část /api/research.", "is-warning");
+    setAiStatus("Živé výtahy se teď nepodařilo načíst. Zkontrolujte, že aplikace běží přes lokální server a že je nastavený klíč BRAVE_SEARCH_API_KEY.", "is-warning");
     return null;
   }
 }
@@ -826,16 +835,15 @@ function renderQuoteCards(records) {
     card.querySelector(".time-context").textContent = record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.";
     renderTags(card.querySelector(".tag-list"), record.tags || [record.type]);
     renderSourceBrief(card.querySelector(".source-brief"), record);
-    const excerptText = excerptFor(record);
+    const excerptText = visibleExcerptFor(record);
     const excerptLabel = card.querySelector(".excerpt-label");
     const excerptBlock = card.querySelector("blockquote");
     const contextExcerpt = card.querySelector(".context-excerpt");
     excerptBlock.textContent = excerptText;
     excerptLabel.textContent = quoteLabelFor(record);
-    excerptLabel.classList.toggle("hidden", !excerptText);
-    excerptBlock.classList.toggle("hidden", !excerptText);
+    excerptBlock.classList.toggle("is-missing", !hasRealExcerpt(record));
     const contextText = record.contextExcerpt || contextExcerptFor(record);
-    contextExcerpt.textContent = contextText ? `Kontext ze zdroje: ${contextText}` : "";
+    contextExcerpt.textContent = contextText ? `${hasRealExcerpt(record) ? "Kontext ze zdroje" : "Co zatím víme o zdroji"}: ${contextText}` : "";
     contextExcerpt.classList.toggle("hidden", !contextText);
     card.querySelector(".relevance").textContent = record.relevance;
 
@@ -870,16 +878,15 @@ function renderTimeline(records) {
       item.querySelector(".time-context").textContent = record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.";
       renderTags(item.querySelector(".tag-list"), record.tags || [record.type]);
       renderSourceBrief(item.querySelector(".source-brief"), record);
-      const excerptText = excerptFor(record);
+      const excerptText = visibleExcerptFor(record);
       const excerptLabel = item.querySelector(".excerpt-label");
       const excerptBlock = item.querySelector("blockquote");
       const contextExcerpt = item.querySelector(".context-excerpt");
       excerptBlock.textContent = excerptText;
       excerptLabel.textContent = quoteLabelFor(record);
-      excerptLabel.classList.toggle("hidden", !excerptText);
-      excerptBlock.classList.toggle("hidden", !excerptText);
+      excerptBlock.classList.toggle("is-missing", !hasRealExcerpt(record));
       const contextText = record.contextExcerpt || contextExcerptFor(record);
-      contextExcerpt.textContent = contextText ? `Kontext ze zdroje: ${contextText}` : "";
+      contextExcerpt.textContent = contextText ? `${hasRealExcerpt(record) ? "Kontext ze zdroje" : "Co zatím víme o zdroji"}: ${contextText}` : "";
       contextExcerpt.classList.toggle("hidden", !contextText);
       item.querySelector(".source-name").textContent = record.source;
       item.querySelector(".relevance").textContent = record.relevance;
@@ -1029,7 +1036,7 @@ function renderStatements(records) {
     const year = record.date ? new Date(`${record.date}T12:00:00`).getFullYear() : "bez data";
     item.className = "statement-item";
     title.textContent = String(year);
-    quote.textContent = record.statementQuote || record.quote || excerptFor(record);
+    quote.textContent = record.statementQuote || record.quote || excerptFor(record) || "Výňatek zatím není doplněn";
     item.append(title, quote);
     statementsList.append(item);
   });

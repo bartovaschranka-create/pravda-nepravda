@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.4-cache-busted-newsroom` ze dne `2026-06-17`.
+Aktuální verze: `0.3.6-visible-excerpts` ze dne `2026-06-17`.
 
 ## Cíl
 
@@ -54,3 +54,25 @@ Po nasazení serverové části frontend automaticky zavolá `/api/research` a k
 ## Spuštění
 
 Otevřete `index.html` v prohlížeči nebo nasaďte repozitář na GitHub Pages.
+
+## Lokální režim s výtahy
+
+Pro živé dohledávání zdrojů a výtahů nepouštějte stránku přímo jako soubor. Spusťte lokální server:
+
+```bat
+spustit-lokalne.bat
+```
+
+Nebo ručně:
+
+```bat
+node server.mjs
+```
+
+Potom otevřete:
+
+```text
+http://localhost:4173
+```
+
+Pro skutečné hledání v médiích je potřeba proměnná `BRAVE_SEARCH_API_KEY`. Bez ní aplikace dál zobrazí rozšířené odkazy a připravené redakční vodítko.
