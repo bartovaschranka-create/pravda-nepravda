@@ -19,6 +19,7 @@ const personProfile = document.querySelector("#person-profile");
 const personAvatar = document.querySelector("#person-avatar");
 const personName = document.querySelector("#person-name");
 const personDescription = document.querySelector("#person-description");
+const personCandidates = document.querySelector("#person-candidates");
 const topicIntro = document.querySelector("#topic-intro");
 const topicIntroTitle = document.querySelector("#topic-intro-title");
 const topicIntroText = document.querySelector("#topic-intro-text");
@@ -39,7 +40,7 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.16";
+const APP_VERSION = "0.3.18";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
@@ -73,6 +74,29 @@ const PERSON_EXPANSIONS = [
   {
     triggers: ["fiala", "petr fiala"],
     names: ["Petr Fiala", "Fiala"]
+  }
+];
+
+const PERSON_CANDIDATES = [
+  {
+    name: "Andrej Babiš",
+    role: "politik, předseda hnutí ANO",
+    aliases: ["babis", "andrej babis", "babiš", "andrej babiš"]
+  },
+  {
+    name: "Ivan Bartoš",
+    role: "politik, Česká pirátská strana",
+    aliases: ["bartos", "ivan bartos", "bartoš", "ivan bartoš"]
+  },
+  {
+    name: "Petr Fiala",
+    role: "politik, ODS",
+    aliases: ["fiala", "petr fiala"]
+  },
+  {
+    name: "Radim Fiala",
+    role: "politik, SPD",
+    aliases: ["fiala", "radim fiala"]
   }
 ];
 
@@ -804,8 +828,68 @@ function yearsFor(records) {
   return years.length ? [...new Set(years)].sort((a, b) => a - b) : DEFAULT_YEARS;
 }
 
+function stanceSignalFor(record) {
+  const text = stripDiacritics([
+    record.statementQuote,
+    record.quote,
+    record.excerpt,
+    record.contextExcerpt,
+    record.relevance
+  ].filter(Boolean).join(" ")).toLowerCase();
+
+  const contrastWords = ["drive", "nyni", "dnes", "pozdji", "později", "zmenil", "zmenila", "otocil", "obrat", "puvodne", "nakonec", "zatimco"];
+  const supportWords = ["podpor", "souhlas", "chce", "prosazuje", "slibil", "pripustil", "je pro", "privita"];
+  const opposeWords = ["odmita", "odmitl", "nesouhlas", "kritiz", "nechce", "varoval", "je proti", "poprel", "vyloucil"];
+
+  const hasContrast = contrastWords.some((word) => text.includes(stripDiacritics(word).toLowerCase()));
+  const support = supportWords.some((word) => text.includes(word));
+  const oppose = opposeWords.some((word) => text.includes(word));
+
+  if (hasContrast) return "contrast";
+  if (support && oppose) return "mixed";
+  if (support) return "support";
+  if (oppose) return "oppose";
+  return "";
+}
+
+function stanceShiftYears(records) {
+  const byYear = new Map();
+
+  records.forEach((record) => {
+    if (!record.date) return;
+    const year = new Date(`${record.date}T12:00:00`).getFullYear();
+    if (Number.isNaN(year)) return;
+    const signal = stanceSignalFor(record);
+    if (!signal) return;
+    if (!byYear.has(year)) byYear.set(year, new Set());
+    byYear.get(year).add(signal);
+  });
+
+  const years = [...byYear.keys()].sort((a, b) => a - b);
+  const marked = new Set();
+  let previousSignals = new Set();
+
+  years.forEach((year) => {
+    const signals = byYear.get(year);
+    if (signals.has("contrast") || signals.has("mixed")) {
+      marked.add(year);
+    }
+
+    const stanceSignals = [...signals].filter((signal) => signal === "support" || signal === "oppose");
+    const previousStanceSignals = [...previousSignals].filter((signal) => signal === "support" || signal === "oppose");
+    if (stanceSignals.length && previousStanceSignals.length && stanceSignals.some((signal) => !previousSignals.has(signal))) {
+      marked.add(year);
+    }
+
+    previousSignals = new Set([...previousSignals, ...signals]);
+  });
+
+  return marked;
+}
+
 function yearStatsFor(records) {
   const counts = new Map();
+  const stanceYears = stanceShiftYears(records);
   let undated = 0;
 
   records.forEach((record) => {
@@ -824,6 +908,7 @@ function yearStatsFor(records) {
     year,
     count: counts.get(year) || 0,
     intensity: (counts.get(year) || 0) / max,
+    stanceShift: stanceYears.has(year),
     undated: false
   }));
 
@@ -870,9 +955,16 @@ function statementCount(records) {
 function displayPersonName(name = "") {
   const trimmed = name.trim();
   const normalized = stripDiacritics(trimmed).toLowerCase();
+  const exactCandidate = PERSON_CANDIDATES.find((candidate) =>
+    stripDiacritics(candidate.name).toLowerCase() === normalized
+  );
+  if (exactCandidate) return exactCandidate.name;
+
   if (normalized.includes("babis")) return "Andrej Babiš";
   if (normalized.includes("bartos")) return "Ivan Bartoš";
-  if (normalized.includes("fiala")) return "Petr Fiala";
+  if (normalized === "fiala") return "Fiala";
+  if (normalized.includes("petr fiala")) return "Petr Fiala";
+  if (normalized.includes("radim fiala")) return "Radim Fiala";
   return trimmed
     .split(/\s+/)
     .map((part) => part ? `${part[0].toUpperCase()}${part.slice(1)}` : "")
@@ -894,6 +986,23 @@ function shortProfileFallback(name, records = []) {
   return `${name} je hledaná veřejně známá osoba. Profil slouží jen k orientaci; níže jsou řazeny ${sources}, citace a souvislosti k zadanému tématu.`;
 }
 
+function personCandidatesFor(query = "") {
+  const normalized = stripDiacritics(query).toLowerCase().trim();
+  if (!normalized) return [];
+
+  const exactName = PERSON_CANDIDATES.find((candidate) =>
+    stripDiacritics(candidate.name).toLowerCase() === normalized
+  );
+  if (exactName) return [exactName];
+
+  return PERSON_CANDIDATES.filter((candidate) =>
+    candidate.aliases.some((alias) => {
+      const normalizedAlias = stripDiacritics(alias).toLowerCase();
+      return normalizedAlias === normalized || normalizedAlias.includes(normalized) || normalized.includes(normalizedAlias);
+    })
+  );
+}
+
 async function loadPublicPersonProfile(name) {
   if (!name || window.location.protocol === "file:") return null;
 
@@ -910,6 +1019,61 @@ async function loadPublicPersonProfile(name) {
   } catch {
     return null;
   }
+}
+
+function candidateInitials(name = "") {
+  return initialsFor(name) || "?";
+}
+
+function renderPersonCandidates(candidates = [], currentName = "") {
+  personCandidates.replaceChildren();
+
+  if (candidates.length <= 1) {
+    personCandidates.classList.add("hidden");
+    return;
+  }
+
+  const note = document.createElement("p");
+  note.className = "candidate-note";
+  note.textContent = "Jméno odpovídá více veřejným osobám. Upřesněte hledaný profil:";
+  personCandidates.append(note);
+
+  candidates.forEach((candidate) => {
+    const button = document.createElement("button");
+    const avatar = document.createElement("span");
+    const text = document.createElement("span");
+    const name = document.createElement("strong");
+    const role = document.createElement("small");
+
+    button.type = "button";
+    button.className = "candidate-card";
+    button.dataset.person = candidate.name;
+    button.classList.toggle("is-active", stripDiacritics(candidate.name).toLowerCase() === stripDiacritics(currentName).toLowerCase());
+
+    avatar.className = "candidate-avatar";
+    avatar.textContent = candidateInitials(candidate.name);
+
+    name.textContent = candidate.name;
+    role.textContent = candidate.role;
+    text.append(name, role);
+    button.append(avatar, text);
+    personCandidates.append(button);
+
+    loadPublicPersonProfile(candidate.name).then((profile) => {
+      if (!profile?.imageUrl || !personCandidates.contains(button)) return;
+      const image = document.createElement("img");
+      image.src = profile.imageUrl;
+      image.alt = candidate.name;
+      image.loading = "lazy";
+      image.referrerPolicy = "no-referrer";
+      image.addEventListener("error", () => {
+        avatar.replaceChildren(candidateInitials(candidate.name));
+      }, { once: true });
+      avatar.replaceChildren(image);
+    });
+  });
+
+  personCandidates.classList.remove("hidden");
 }
 
 function setPersonAvatar(name, imageUrl = "") {
@@ -937,11 +1101,19 @@ function setPersonAvatar(name, imageUrl = "") {
 function renderPersonProfile(filters, records = []) {
   const name = filters.person.trim();
   const displayName = displayPersonName(name);
+  const candidates = personCandidatesFor(name);
 
   setPersonAvatar(displayName);
   personName.textContent = displayName;
-  personDescription.textContent = shortProfileFallback(displayName, records);
+  personDescription.textContent = candidates.length > 1
+    ? `Zadané jméno může odpovídat více veřejným osobám. Vyberte konkrétní profil, aby se výsledky nepletly mezi různé osoby.`
+    : shortProfileFallback(displayName, records);
+  renderPersonCandidates(candidates, displayName);
   personProfile.classList.toggle("hidden", !name);
+
+  if (candidates.length > 1) {
+    return;
+  }
 
   loadPublicPersonProfile(displayName).then((profile) => {
     if (!profile || personName.textContent !== displayName) return;
@@ -1319,16 +1491,18 @@ function renderRecommended(records) {
 function renderYearFilter(records, filters) {
   yearFilter.replaceChildren();
 
-  yearStatsFor(records).forEach(({ year, count, intensity, undated }) => {
+  yearStatsFor(records).forEach(({ year, count, intensity, stanceShift, undated }) => {
     const button = document.createElement("button");
     const isActive = !undated && filters.dateFrom === `${year}-01-01` && filters.dateTo === `${year}-12-31`;
     button.type = "button";
-    button.className = `year-chip ${undated ? "is-undated" : ""} ${isActive ? "is-active" : ""}`.trim();
+    button.className = `year-chip ${undated ? "is-undated" : ""} ${stanceShift ? "has-stance-shift" : ""} ${isActive ? "is-active" : ""}`.trim();
     button.dataset.year = String(year);
     button.style.setProperty("--year-intensity", String(Math.max(0.08, intensity)));
     button.disabled = Boolean(undated);
-    button.title = undated ? `${count} zdrojů zatím nemá dohledané datum` : (count ? `${year}: ${count} zdrojů` : `${year}: zatím bez datovaných zdrojů`);
-    button.innerHTML = `<span>${undated ? "bez data" : year}</span><small>${count ? `${count} zdrojů` : "bez dat"}</small>`;
+    button.title = undated
+      ? `${count} zdrojů zatím nemá dohledané datum`
+      : `${year}: ${count ? `${count} zdrojů` : "zatím bez datovaných zdrojů"}${stanceShift ? ". Možný posun ve veřejných formulacích nebo postoji podle dostupných výňatků." : ""}`;
+    button.innerHTML = `<span>${undated ? "bez data" : year}</span><small>${count ? `${count} zdrojů` : "bez dat"}</small>${stanceShift ? "<em>změna?</em>" : ""}`;
     yearFilter.append(button);
   });
 
@@ -1465,6 +1639,16 @@ relatedTopics.addEventListener("click", (event) => {
 
   keywordsInput.value = button.dataset.topic;
   runSearch(collectFilters(), buildGeneratedRecords(collectFilters()));
+});
+
+personCandidates.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-person]");
+  if (!button) {
+    return;
+  }
+
+  personInput.value = button.dataset.person;
+  form.requestSubmit();
 });
 
 form.addEventListener("submit", async (event) => {

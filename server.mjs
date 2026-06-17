@@ -7,7 +7,7 @@ import handler from "./api/research.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
-const VERSION = "0.3.16";
+const VERSION = "0.3.18";
 
 async function loadEnvFile() {
   const envPath = path.join(__dirname, ".env");

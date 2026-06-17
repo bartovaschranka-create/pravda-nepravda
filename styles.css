@@ -438,6 +438,71 @@ select:focus {
   font-weight: 900;
 }
 
+.person-candidates {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.8rem;
+}
+
+.candidate-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 800;
+}
+
+.candidate-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: center;
+  width: 100%;
+  border: 1px solid rgba(16, 32, 51, 0.13);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--ink);
+  padding: 0.58rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.candidate-card:hover,
+.candidate-card.is-active {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+}
+
+.candidate-avatar {
+  display: grid;
+  place-items: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.candidate-avatar img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.candidate-card strong,
+.candidate-card small {
+  display: block;
+}
+
+.candidate-card small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
 .empty-state {
   display: grid;
   grid-template-columns: minmax(8rem, 13rem) 1fr;
@@ -590,6 +655,23 @@ select:focus {
   font-weight: 800;
 }
 
+.year-chip em {
+  width: max-content;
+  margin: 0.18rem auto 0;
+  padding: 0.08rem 0.38rem;
+  border: 1px solid rgba(240, 199, 104, 0.58);
+  border-radius: 999px;
+  color: #f0c768;
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1.35;
+}
+
+.year-chip.has-stance-shift {
+  box-shadow: inset 0 -3px 0 #f0c768;
+}
+
 .year-chip + .year-chip {
   border-left: 0;
 }
@@ -603,6 +685,12 @@ select:focus {
 .year-chip:hover small,
 .year-chip.is-active small {
   color: rgba(8, 29, 49, 0.72);
+}
+
+.year-chip:hover em,
+.year-chip.is-active em {
+  border-color: rgba(8, 29, 49, 0.36);
+  color: #081d31;
 }
 
 .year-chip.is-undated {
