@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.0-editorial-archive` ze dne `2026-06-16`.
+Aktuální verze: `0.3.3-source-extracts` ze dne `2026-06-17`.
 
 ## Cíl
 
@@ -21,9 +21,9 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - funkce `expandSearchTerms(query)` pro technické rozšíření dotazu o související výrazy a varianty bez diakritiky,
 - označení, zda je výsledek podle přesného dotazu nebo podle souvisejícího výrazu,
 - karty hlavních zdrojů,
-- pole `quote` pro přímou citaci výroku a pole `excerpt` pro podpůrný úryvek ze zdroje,
+- pole `quote` pro přímou citaci výroku, `excerpt` pro hlavní krátký úryvek a `contextExcerpt` pro doplňující kontext ze stejného zdroje,
 - dlouhé výňatky se v náhledu automaticky zkrátí, aby karta ukazovala jen zásadní část a ne celý článek,
-- volitelné napojení `/api/research`, které může automaticky dohledat zdroje a vrátit krátké výňatky do pole `excerpt`,
+- volitelné napojení `/api/research`, které dohledá zdroje, načte veřejně dostupný text článku a vrátí krátké citace, výňatky a body `sourceBrief`,
 - časová osa zdrojů,
 - krátké neutrální shrnutí souvislostí.
 
@@ -49,7 +49,7 @@ Potřebná proměnná prostředí:
 
 - `BRAVE_SEARCH_API_KEY`
 
-Po nasazení serverové části frontend automaticky zavolá `/api/research` a karty se doplní o krátké `excerpt` přímo ze zdrojů.
+Po nasazení serverové části frontend automaticky zavolá `/api/research` a karty se doplní o `quote`, `excerpt`, `contextExcerpt` a konkrétní body `sourceBrief` přímo ze zdrojů. Článek se celý neukládá ani nezobrazuje.
 
 ## Spuštění
 

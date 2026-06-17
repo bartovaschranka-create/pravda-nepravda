@@ -5,18 +5,23 @@
     "filters": {
       "person": "Ivan Bartoš",
       "exactQuote": "",
-      "keywords": "drogy",
+      "keywords": "digitalizace",
       "dateFrom": "",
       "dateTo": "",
       "source": "",
       "sourceType": ""
     },
-    "expandedTerms": ["drogy"],
+    "expandedTerms": [
+      "digitalizace",
+      "digitalizace stavebního řízení",
+      "Portál stavebníka",
+      "DSŘ"
+    ],
     "limit": 30,
     "rules": {
       "maxExcerptChars": 260,
       "noFullArticles": true,
-          "sourceTimelineOnly": true
+      "sourceTimelineOnly": true
     }
   },
   "response": {
@@ -27,15 +32,20 @@
         "date": "2024-01-15",
         "type": "Článek",
         "directUrl": "https://example.com/clanek",
-        "searchUrl": "https://www.google.com/search?q=...",
+        "searchUrl": "",
         "quote": "Přímá citace výroku, pokud je ve zdroji dohledatelná.",
         "excerpt": "Krátký výňatek přímo ze zdroje, maximálně několik vět.",
-        "relevance": "Proč je zdroj relevantní k osobě, tématu a časovému kontextu.",
-        "matchedTerm": "drogy",
-        "matchType": "exact",
-        "matchLabel": "TOP zdroj · nalezeno podle přesného dotazu",
+        "contextExcerpt": "Doplňující krátká pasáž ze stejného zdroje, která vysvětluje okolnosti citace.",
+        "sourceBrief": [
+          "Hlavní pasáž: konkrétní věta vybraná ze zdroje.",
+          "Další kontext: další věta vybraná ze zdroje."
+        ],
+        "relevance": "Krátce proč zdroj pomáhá pochopit osobu, téma a časový kontext.",
+        "matchedTerm": "digitalizace stavebního řízení",
+        "matchType": "related",
+        "matchLabel": "Související výraz: digitalizace stavebního řízení",
         "sourceGroup": "top",
-        "relevanceScore": 195
+        "relevanceScore": 295
       }
     ]
   }

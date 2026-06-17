@@ -39,6 +39,7 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
+const APP_VERSION = "0.3.3";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
@@ -690,6 +691,24 @@ function excerptFor(record) {
   return `${cleanCut.trim()}…`;
 }
 
+function contextExcerptFor(record) {
+  const quote = record.quote && record.quote.trim();
+  const excerpt = record.excerpt && record.excerpt.trim();
+
+  if (!excerpt || excerpt === quote) {
+    return "";
+  }
+
+  if (excerpt.length <= EXCERPT_LIMIT) {
+    return excerpt;
+  }
+
+  const shortened = excerpt.slice(0, EXCERPT_LIMIT);
+  const lastSpace = shortened.lastIndexOf(" ");
+  const cleanCut = lastSpace > 180 ? shortened.slice(0, lastSpace) : shortened;
+  return `${cleanCut.trim()}…`;
+}
+
 function quoteLabelFor(record) {
   if (record.quote && record.quote.trim()) {
     return "Citace výroku";
@@ -723,6 +742,7 @@ function normalizeAiRecord(record, index) {
     relevanceScore: Number(record.relevanceScore || 0),
     quote: record.quote || record.statementQuote || "",
     excerpt: record.excerpt || "",
+    contextExcerpt: record.contextExcerpt || "",
     relevance: record.relevance || "Zdroj přináší informace k zadané osobě, tématu a časovému kontextu.",
     sourceBrief: record.sourceBrief || [],
     timeContext: record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.",
@@ -809,10 +829,14 @@ function renderQuoteCards(records) {
     const excerptText = excerptFor(record);
     const excerptLabel = card.querySelector(".excerpt-label");
     const excerptBlock = card.querySelector("blockquote");
+    const contextExcerpt = card.querySelector(".context-excerpt");
     excerptBlock.textContent = excerptText;
     excerptLabel.textContent = quoteLabelFor(record);
     excerptLabel.classList.toggle("hidden", !excerptText);
     excerptBlock.classList.toggle("hidden", !excerptText);
+    const contextText = record.contextExcerpt || contextExcerptFor(record);
+    contextExcerpt.textContent = contextText ? `Kontext ze zdroje: ${contextText}` : "";
+    contextExcerpt.classList.toggle("hidden", !contextText);
     card.querySelector(".relevance").textContent = record.relevance;
 
     const link = card.querySelector("a");
@@ -849,10 +873,14 @@ function renderTimeline(records) {
       const excerptText = excerptFor(record);
       const excerptLabel = item.querySelector(".excerpt-label");
       const excerptBlock = item.querySelector("blockquote");
+      const contextExcerpt = item.querySelector(".context-excerpt");
       excerptBlock.textContent = excerptText;
       excerptLabel.textContent = quoteLabelFor(record);
       excerptLabel.classList.toggle("hidden", !excerptText);
       excerptBlock.classList.toggle("hidden", !excerptText);
+      const contextText = record.contextExcerpt || contextExcerptFor(record);
+      contextExcerpt.textContent = contextText ? `Kontext ze zdroje: ${contextText}` : "";
+      contextExcerpt.classList.toggle("hidden", !contextText);
       item.querySelector(".source-name").textContent = record.source;
       item.querySelector(".relevance").textContent = record.relevance;
 
