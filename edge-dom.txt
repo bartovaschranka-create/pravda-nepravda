@@ -1,0 +1,251 @@
+﻿<!DOCTYPE html>
+<html lang="cs"><head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Archiv výroků: dohledatelné veřejné výroky, citace a zdroje v časovém kontextu.">
+    <meta name="app-version" content="0.3.9-visible-source-coverage">
+    <title>Archiv výroků</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;family=Merriweather:wght@700;900&amp;display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css?v=0.3.9">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="search-panel" aria-labelledby="app-title">
+        <div class="brand-row">
+          <div class="brand-mark" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div>
+            <h1 id="app-title">Archiv výroků</h1>
+            <p>Veřejné citace, rozhovory, články a dokumenty v časové souvislosti.</p>
+          </div>
+        </div>
+
+        <div class="notice">
+          <strong>Upozornění:</strong>
+          Aplikace nic neposuzuje. Ukazuje zdroje, citace, souvislosti, časovou posloupnost a odkazy na původní materiály.
+        </div>
+
+        <form id="search-form" class="search-form">
+          <label for="person">Osoba</label>
+          <input id="person" name="person" autocomplete="off" placeholder="Např. Andrej Babiš" required="">
+
+          <label for="quote">Přesná citace</label>
+          <textarea id="quote" name="quote" rows="3" placeholder="Volitelné: vložte přesný výrok v uvozovkách"></textarea>
+
+          <label for="keywords">Téma / klíčová slova</label>
+          <textarea id="keywords" name="keywords" rows="3" placeholder="Např. obilí Ukrajina, daně, robotaxi" required=""></textarea>
+
+          <div class="date-grid">
+            <div>
+              <label for="date-from">Období od</label>
+              <input id="date-from" name="dateFrom" type="date">
+            </div>
+            <div>
+              <label for="date-to">Období do</label>
+              <input id="date-to" name="dateTo" type="date">
+            </div>
+          </div>
+          <p class="field-help">Když období nevyplníte, bere se vše od začátku veřejně dostupného webu do současnosti.</p>
+
+          <label for="source">Zdroj / médium</label>
+          <input id="source" name="source" autocomplete="off" placeholder="Např. iROZHLAS, ČT24, X, psp.cz">
+
+          <label for="source-type">Typ zdroje</label>
+          <select id="source-type" name="sourceType">
+            <option value="">Všechny typy</option>
+            <option value="Rozhovor">Rozhovor</option>
+            <option value="Článek">Článek</option>
+            <option value="Tisková zpráva">Tisková zpráva</option>
+            <option value="Sociální síť">Sociální síť</option>
+            <option value="Investigativní web">Investigativní web</option>
+          </select>
+
+          <button type="submit">
+            <span aria-hidden="true">⌕</span>
+            Vyhledat
+          </button>
+        </form>
+
+        <div class="source-box" aria-label="Záložní odkazy">
+          <h2>Záložní odkazy</h2>
+          <p>Pokud u záznamu není přímý odkaz, zobrazí se odkaz na hledání ve vybraném zdroji.</p>
+          <div id="source-links" class="source-links"><div class="source-summary">
+    <strong>Prohledává se 28 okruhů zdrojů</strong>
+    <span>15 hlavních médií · 2 investigativní · 3 oficiální · 8 archivní</span>
+  </div><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova" target="_blank" rel="noopener noreferrer">Běžná média</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Airozhlas.cz" target="_blank" rel="noopener noreferrer">iROZHLAS</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Act24.ceskatelevize.cz" target="_blank" rel="noopener noreferrer">ČT24</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Aceskenoviny.cz" target="_blank" rel="noopener noreferrer">ČTK / České noviny</a><a href="https://news.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova&amp;hl=cs&amp;gl=CZ&amp;ceid=CZ%3Acs" target="_blank" rel="noopener noreferrer">Google Zprávy</a><a href="https://search.seznam.cz/?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova" target="_blank" rel="noopener noreferrer">Seznam vyhledávání</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Aseznamzpravy.cz" target="_blank" rel="noopener noreferrer">Seznam Zprávy</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Aaktualne.cz" target="_blank" rel="noopener noreferrer">Aktuálně.cz</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Adenikn.cz" target="_blank" rel="noopener noreferrer">Deník N</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Ahn.cz+OR+site%3Aihned.cz" target="_blank" rel="noopener noreferrer">Hospodářské noviny</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Arespekt.cz" target="_blank" rel="noopener noreferrer">Respekt</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Arozhlas.cz+OR+site%3Aplus.rozhlas.cz" target="_blank" rel="noopener noreferrer">Český rozhlas</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Aceskatelevize.cz" target="_blank" rel="noopener noreferrer">Česká televize archiv</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Avlada.gov.cz+OR+site%3Amvcr.cz+OR+site%3Ammr.gov.cz+OR+site%3Amfcr.cz" target="_blank" rel="noopener noreferrer">Ministerstva a úřady</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Ajustice.cz+OR+site%3Ausoud.cz+OR+site%3Ansoud.cz" target="_blank" rel="noopener noreferrer">Soudy a justice</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Anku.cz+OR+site%3Auohs.cz+OR+site%3Ahlidacstatu.cz" target="_blank" rel="noopener noreferrer">Kontrolní a veřejné databáze</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Apsp.cz+OR+site%3Asenat.cz+OR+site%3Avlada.gov.cz" target="_blank" rel="noopener noreferrer">Parlamentní a veřejné databáze</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+rozhovor+OR+interview+site%3Ayoutube.com" target="_blank" rel="noopener noreferrer">Rozhovory a videa</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+%22tiskov%C3%A1+zpr%C3%A1va%22+OR+%22press+release%22" target="_blank" rel="noopener noreferrer">Tiskové zprávy</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Ax.com+OR+site%3Atwitter.com+OR+site%3Afacebook.com+OR+site%3Ainstagram.com" target="_blank" rel="noopener noreferrer">Sociální sítě</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+investigace+OR+anal%C3%BDza+OR+dokumenty+site%3Ainvestigace.cz+OR+site%3Ahlidacipes.org+OR+site%3Arespekt.cz" target="_blank" rel="noopener noreferrer">Investigativní a analytické zdroje</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Ainvestigace.cz" target="_blank" rel="noopener noreferrer">Investigace.cz</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Ahlidacipes.org" target="_blank" rel="noopener noreferrer">HlídacíPes.org</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+site%3Aceska-justice.cz+OR+site%3Aekonomickydenik.cz+OR+site%3Alupa.cz" target="_blank" rel="noopener noreferrer">Odborné a profesní zdroje</a><a href="https://web.archive.org/web/*/Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova" target="_blank" rel="noopener noreferrer">Internet Archive / starší web</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+archiv+OR+star%C5%A1%C3%AD+%C4%8Dl%C3%A1nek" target="_blank" rel="noopener noreferrer">Archiv starších článků</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+star%C5%A1%C3%AD+rozhovor+OR+archiv+rozhovor" target="_blank" rel="noopener noreferrer">Starší rozhovory</a><a href="https://www.google.com/search?q=Ve%C5%99ejn%C3%A1%20osoba%20kl%C3%AD%C4%8Dov%C3%A1%20slova+archiv+site%3Avlada.gov.cz+OR+site%3Amvcr.cz+OR+site%3Apsp.cz" target="_blank" rel="noopener noreferrer">Archiv institucí</a></div>
+        </div>
+
+        <div class="principles">
+          <h2>Pravidla zobrazení</h2>
+          <ul>
+            <li>Neukazovat celé články, jen krátké relevantní citace.</li>
+            <li>U každého záznamu uvést název, médium, datum a odkaz.</li>
+            <li>Nehodnotit osobu, pouze porovnávat výroky a kontext.</li>
+          </ul>
+        </div>
+
+        <div class="version-badge" aria-label="Verze aplikace">
+          verze 0.3.9
+        </div>
+      </section>
+
+      <section class="results-panel" aria-live="polite">
+        <div class="toolbar">
+          <div>
+            <p class="eyebrow">Redakční archiv</p>
+            <h2 id="result-title">Zadejte osobu, výrok a téma</h2>
+          </div>
+          <div class="view-actions">
+            <button id="sample-btn" type="button">Ukázkový případ</button>
+            <button id="clear-btn" type="button" class="secondary">Vyčistit</button>
+          </div>
+        </div>
+
+        <section id="person-profile" class="person-profile hidden" aria-label="Hledaná osoba">
+          <div id="person-avatar" class="person-avatar"></div>
+          <div>
+            <p class="eyebrow">Hledaná osoba</p>
+            <h3 id="person-name"></h3>
+            <p id="person-description"></p>
+          </div>
+        </section>
+
+        <div id="empty-state" class="empty-state">
+          <div class="empty-visual" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p>Po vyhledání se zobrazí přehled zdrojů, citací, článků, rozhovorů a dokumentů k tématu. Pokud není k dispozici přímý odkaz, aplikace nabídne záložní odkaz na hledání ve zdroji.</p>
+        </div>
+
+        <section id="summary-card" class="summary-card hidden" aria-labelledby="summary-title">
+          <p class="eyebrow">Neutrální shrnutí</p>
+          <h3 id="summary-title">Souvislosti v čase</h3>
+          <p id="summary-text"></p>
+        </section>
+
+        <div id="ai-status" class="ai-status hidden" role="status"></div>
+
+        <section id="topic-intro" class="topic-intro hidden" aria-labelledby="topic-intro-title">
+          <p class="eyebrow">Úvod k tématu</p>
+          <h3 id="topic-intro-title"></h3>
+          <div id="topic-stats" class="topic-stats"></div>
+          <p id="topic-intro-text"></p>
+        </section>
+
+        <section id="year-section" class="year-section timeline-strip hidden" aria-labelledby="year-title">
+          <div class="section-head">
+            <p class="eyebrow">Časová osa</p>
+            <h3 id="year-title">Filtrovat podle roku</h3>
+          </div>
+          <div id="year-filter" class="year-filter"></div>
+        </section>
+
+        <section id="recommended-section" class="recommended-section hidden" aria-labelledby="recommended-title">
+          <div class="section-head">
+            <p class="eyebrow">Co stojí za přečtení</p>
+            <h3 id="recommended-title">Doporučené zdroje</h3>
+          </div>
+          <ol id="recommended-list" class="recommended-list"></ol>
+        </section>
+
+        <section id="quote-cards-section" class="quote-cards-section hidden" aria-labelledby="quote-cards-title">
+          <div class="section-head">
+            <p class="eyebrow">Nejrelevantnější</p>
+            <h3 id="quote-cards-title">Až 30 zdrojů podle relevance</h3>
+            <p class="section-note">Nahoře jsou prioritní zdroje, níže archivní a starší odkazy. Pokud je k dispozici konkrétní výrok nebo citace ze zdroje, je na kartě nejvýraznější.</p>
+          </div>
+          <div id="quote-cards" class="quote-cards"></div>
+        </section>
+
+        <section class="timeline-section" aria-labelledby="timeline-title">
+          <div class="section-head">
+            <p class="eyebrow">Chronologie</p>
+            <h3 id="timeline-title">Časová osa zdrojů</h3>
+          </div>
+          <div id="timeline" class="timeline" aria-label="Časová osa"></div>
+        </section>
+      </section>
+
+      <aside class="context-panel" aria-label="Časový a tematický kontext">
+        <section id="statements-section" class="statements-section hidden" aria-labelledby="statements-title">
+          <div class="section-head">
+            <p class="eyebrow">Výroky v čase</p>
+            <h3 id="statements-title">Chronologie citací</h3>
+          </div>
+          <div id="statements-list" class="statements-list"></div>
+        </section>
+
+        <section id="related-section" class="related-section hidden" aria-labelledby="related-title">
+          <div class="section-head">
+            <p class="eyebrow">Související témata</p>
+            <h3 id="related-title">Navazující hledání</h3>
+          </div>
+          <div id="related-topics" class="related-topics"></div>
+        </section>
+      </aside>
+    </main>
+
+    <template id="quote-card-template">
+      <article class="quote-card">
+        <h4></h4>
+        <div class="card-meta">
+          <span class="type-badge"></span>
+          <time></time>
+        </div>
+        <p class="match-note"></p>
+        <p class="score-label"></p>
+        <p class="time-context"></p>
+        <div class="tag-list"></div>
+        <div class="source-brief"></div>
+        <p class="excerpt-label"></p>
+        <blockquote></blockquote>
+        <p class="context-excerpt"></p>
+        <p class="relevance"></p>
+        <a target="_blank" rel="noopener noreferrer"></a>
+      </article>
+    </template>
+
+    <template id="timeline-item-template">
+      <article class="timeline-item">
+        <div class="date-pill"></div>
+        <div class="timeline-content">
+          <div class="item-head">
+            <span class="type-badge"></span>
+            <time></time>
+          </div>
+          <h4></h4>
+          <p class="match-note"></p>
+          <p class="score-label"></p>
+          <p class="time-context"></p>
+          <div class="tag-list"></div>
+          <div class="source-brief"></div>
+          <p class="excerpt-label"></p>
+          <blockquote></blockquote>
+          <p class="context-excerpt"></p>
+          <dl class="source-detail">
+            <div>
+              <dt>Zdroj</dt>
+              <dd class="source-name"></dd>
+            </div>
+            <div>
+              <dt>Co přináší</dt>
+              <dd class="relevance"></dd>
+            </div>
+          </dl>
+          <a target="_blank" rel="noopener noreferrer"></a>
+        </div>
+      </article>
+    </template>
+
+    <script src="app.js?v=0.3.9"></script>
+  
+
+</body></html>

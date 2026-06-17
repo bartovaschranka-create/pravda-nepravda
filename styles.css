@@ -297,6 +297,27 @@ select:focus {
   margin-top: 0.7rem;
 }
 
+.source-summary {
+  display: grid;
+  gap: 0.18rem;
+  margin-bottom: 0.35rem;
+  border-left: 4px solid var(--gold);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0.7rem 0.75rem;
+}
+
+.source-summary strong {
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.source-summary span {
+  color: #c9d4df;
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
 .source-links a {
   display: block;
   overflow-wrap: anywhere;
@@ -582,6 +603,23 @@ select:focus {
 .year-chip:hover small,
 .year-chip.is-active small {
   color: rgba(8, 29, 49, 0.72);
+}
+
+.year-chip.is-undated {
+  border-style: dashed;
+  opacity: 0.82;
+  cursor: default;
+}
+
+.year-chip.is-undated:hover {
+  background:
+    linear-gradient(0deg, rgba(215, 168, 70, calc(var(--year-intensity, 0) * 0.72)), transparent 72%),
+    rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+}
+
+.year-chip.is-undated:hover small {
+  color: rgba(255, 255, 255, 0.76);
 }
 
 .recommended-section {

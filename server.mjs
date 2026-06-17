@@ -8,6 +8,22 @@ import handler from "./api/research.js";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
 
+async function loadEnvFile() {
+  const envPath = path.join(__dirname, ".env");
+  if (!existsSync(envPath)) return;
+
+  const content = await readFile(envPath, "utf8");
+  content.split(/\r?\n/).forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) return;
+    const index = trimmed.indexOf("=");
+    if (index === -1) return;
+    const key = trimmed.slice(0, index).trim();
+    const value = trimmed.slice(index + 1).trim().replace(/^["']|["']$/g, "");
+    if (key && !process.env[key]) process.env[key] = value;
+  });
+}
+
 const MIME_TYPES = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
@@ -72,11 +88,23 @@ async function serveStatic(req, res) {
   res.end(await readFile(filePath));
 }
 
+await loadEnvFile();
+
 const server = http.createServer(async (req, res) => {
   try {
     if (req.url?.startsWith("/api/research")) {
       req.body = await readBody(req);
       await handler(req, createResponse(res));
+      return;
+    }
+
+    if (req.url?.startsWith("/api/status")) {
+      res.setHeader("Content-Type", "application/json; charset=utf-8");
+      res.end(JSON.stringify({
+        ok: true,
+        version: "0.3.10",
+        braveSearchConfigured: Boolean(process.env.BRAVE_SEARCH_API_KEY)
+      }));
       return;
     }
 

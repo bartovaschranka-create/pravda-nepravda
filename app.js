@@ -39,7 +39,7 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.8";
+const APP_VERSION = "0.3.10";
 let currentRecords = [];
 
 const TERM_EXPANSIONS = [
@@ -520,6 +520,18 @@ function renderSourceLinks(filters) {
   const dates = buildDateOperators(filters);
   sourceLinks.replaceChildren();
 
+  const groups = searchTargets.reduce((acc, target) => {
+    acc[target.group] = (acc[target.group] || 0) + 1;
+    return acc;
+  }, {});
+  const summary = document.createElement("div");
+  summary.className = "source-summary";
+  summary.innerHTML = `
+    <strong>Prohledává se ${searchTargets.length} okruhů zdrojů</strong>
+    <span>${groups.top || 0} hlavních médií · ${groups.investigative || 0} investigativní · ${groups.official || 0} oficiální · ${groups.archive || 0} archivní</span>
+  `;
+  sourceLinks.append(summary);
+
   searchTargets.forEach((target) => {
     const link = document.createElement("a");
     link.href = target.build(query, dates);
@@ -756,9 +768,13 @@ function yearsFor(records) {
 
 function yearStatsFor(records) {
   const counts = new Map();
+  let undated = 0;
 
   records.forEach((record) => {
-    if (!record.date) return;
+    if (!record.date) {
+      undated += 1;
+      return;
+    }
     const year = new Date(`${record.date}T12:00:00`).getFullYear();
     if (!Number.isNaN(year)) counts.set(year, (counts.get(year) || 0) + 1);
   });
@@ -766,11 +782,23 @@ function yearStatsFor(records) {
   const years = counts.size ? [...counts.keys()].sort((a, b) => a - b) : DEFAULT_YEARS;
   const max = Math.max(1, ...years.map((year) => counts.get(year) || 0));
 
-  return years.map((year) => ({
+  const stats = years.map((year) => ({
     year,
     count: counts.get(year) || 0,
-    intensity: (counts.get(year) || 0) / max
+    intensity: (counts.get(year) || 0) / max,
+    undated: false
   }));
+
+  if (undated) {
+    stats.push({
+      year: "bez-data",
+      count: undated,
+      intensity: 0.28,
+      undated: true
+    });
+  }
+
+  return stats;
 }
 
 function recordUrl(record) {
@@ -778,7 +806,7 @@ function recordUrl(record) {
 }
 
 function recordLinkText(record) {
-  return record.directUrl ? "Otevřít článek" : "Otevřít záložní hledání";
+  return record.directUrl ? "Celý článek" : "Otevřít záložní hledání";
 }
 
 function periodFromRecords(records) {
@@ -865,6 +893,10 @@ function quoteLabelFor(record) {
 }
 
 function visibleExcerptFor(record) {
+  if (record.isLiveResult && !hasRealExcerpt(record)) {
+    return "";
+  }
+
   return excerptFor(record) || "Výňatek zatím není doplněn";
 }
 
@@ -881,7 +913,7 @@ function setAiStatus(message, state = "") {
 function normalizeAiRecord(record, index) {
   return {
     date: record.date || "",
-    dateLabel: record.date ? "" : "Zdroj bez data",
+    dateLabel: record.date ? "" : (record.dateLabel || "datum nezjištěno"),
     type: record.type || "Článek",
     title: record.title || record.source || `Zdroj ${index + 1}`,
     source: record.source || "Neznámý zdroj",
@@ -900,7 +932,8 @@ function normalizeAiRecord(record, index) {
     scoreLabel: record.scoreLabel || scoreLabelFor(Number(record.relevanceScore || 0)),
     statementQuote: record.statementQuote || "",
     directUrl: record.directUrl || record.url || "",
-    searchUrl: record.searchUrl || ""
+    searchUrl: record.searchUrl || "",
+    isLiveResult: Boolean(record.isLiveResult || record.directUrl || record.url)
   };
 }
 
@@ -983,6 +1016,8 @@ function renderQuoteCards(records) {
     const contextExcerpt = card.querySelector(".context-excerpt");
     excerptBlock.textContent = excerptText;
     excerptLabel.textContent = quoteLabelFor(record);
+    excerptLabel.classList.toggle("hidden", !excerptText);
+    excerptBlock.classList.toggle("hidden", !excerptText);
     excerptBlock.classList.toggle("is-missing", !hasRealExcerpt(record));
     const contextText = record.contextExcerpt || contextExcerptFor(record);
     contextExcerpt.textContent = contextText ? `${hasRealExcerpt(record) ? "Kontext ze zdroje" : "Co zatím víme o zdroji"}: ${contextText}` : "";
@@ -1026,6 +1061,8 @@ function renderTimeline(records) {
       const contextExcerpt = item.querySelector(".context-excerpt");
       excerptBlock.textContent = excerptText;
       excerptLabel.textContent = quoteLabelFor(record);
+      excerptLabel.classList.toggle("hidden", !excerptText);
+      excerptBlock.classList.toggle("hidden", !excerptText);
       excerptBlock.classList.toggle("is-missing", !hasRealExcerpt(record));
       const contextText = record.contextExcerpt || contextExcerptFor(record);
       contextExcerpt.textContent = contextText ? `${hasRealExcerpt(record) ? "Kontext ze zdroje" : "Co zatím víme o zdroji"}: ${contextText}` : "";
@@ -1122,15 +1159,16 @@ function renderRecommended(records) {
 function renderYearFilter(records, filters) {
   yearFilter.replaceChildren();
 
-  yearStatsFor(records).forEach(({ year, count, intensity }) => {
+  yearStatsFor(records).forEach(({ year, count, intensity, undated }) => {
     const button = document.createElement("button");
-    const isActive = filters.dateFrom === `${year}-01-01` && filters.dateTo === `${year}-12-31`;
+    const isActive = !undated && filters.dateFrom === `${year}-01-01` && filters.dateTo === `${year}-12-31`;
     button.type = "button";
-    button.className = `year-chip ${isActive ? "is-active" : ""}`.trim();
+    button.className = `year-chip ${undated ? "is-undated" : ""} ${isActive ? "is-active" : ""}`.trim();
     button.dataset.year = String(year);
     button.style.setProperty("--year-intensity", String(Math.max(0.08, intensity)));
-    button.title = count ? `${year}: ${count} zdrojů` : `${year}: zatím bez datovaných zdrojů`;
-    button.innerHTML = `<span>${year}</span><small>${count ? `${count} zdrojů` : "bez dat"}</small>`;
+    button.disabled = Boolean(undated);
+    button.title = undated ? `${count} zdrojů zatím nemá dohledané datum` : (count ? `${year}: ${count} zdrojů` : `${year}: zatím bez datovaných zdrojů`);
+    button.innerHTML = `<span>${undated ? "bez data" : year}</span><small>${count ? `${count} zdrojů` : "bez dat"}</small>`;
     yearFilter.append(button);
   });
 
@@ -1242,11 +1280,13 @@ form.addEventListener("submit", async (event) => {
     return;
   }
 
-  runSearch(filters, buildGeneratedRecords(filters));
-
   const aiRecords = await fetchAiRecords(filters);
   if (aiRecords) {
     runSearch(filters, aiRecords);
+  } else if (window.location.protocol === "file:") {
+    runSearch(filters, buildGeneratedRecords(filters));
+  } else {
+    runSearch(filters, []);
   }
 });
 

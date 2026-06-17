@@ -2,7 +2,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-const APP_VERSION = "0.3.8";
+const APP_VERSION = "0.3.10";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const files = {
   html: "index.html",
@@ -42,6 +42,7 @@ function parseCheck(file, source) {
     code = code
       .replace(/^import .+$/gm, "")
       .replace("const __dirname = path.dirname(fileURLToPath(import.meta.url));", "const __dirname = '';");
+    code = `(async () => {\n${code}\n})`;
   }
 
   try {
@@ -66,8 +67,15 @@ assert(app.includes("Výňatek zatím není doplněn"), "Chybí fallback pro ned
 assert(app.includes("visibleExcerptFor"), "Chybí funkce pro vždy viditelný výňatek.");
 assert(app.includes("yearStatsFor"), "Chybí výpočet hustoty článků v časové ose.");
 assert(app.includes("sourceGroupRank"), "Chybí řazení skupin zdrojů podle relevance.");
+assert(app.includes("Prohledává se"), "Chybí viditelný souhrn počtu prohledávaných zdrojů.");
+assert(app.includes("bez-data"), "Chybí zobrazení zdrojů bez dohledaného data na časové ose.");
+assert(app.includes("Celý článek"), "Přímý odkaz na konkrétní článek nemá správný text.");
+assert(app.includes("isLiveResult"), "Chybí rozlišení konkrétních živých výsledků z API.");
+assert(app.includes("window.location.protocol === \"file:\""), "Chybí oddělení statického režimu od živého API režimu.");
+assert((await text(files.api)).includes("resultSnippet"), "Backend nepoužívá Brave snippet/description jako výňatek.");
 assert(styles.includes("blockquote.is-missing"), "Chybí vizuální styl pro nedoplněný výňatek.");
 assert(styles.includes("--year-intensity"), "Chybí vizuální intenzita roků v časové ose.");
+assert(styles.includes("source-summary"), "Chybí styl pro viditelný souhrn zdrojů.");
 
 const visibleSurface = [html, app, readme].join("\n");
 for (const term of forbiddenVisibleTerms) {

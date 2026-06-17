@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.8-source-coverage-timeline-density` ze dne `2026-06-17`.
+Aktuální verze: `0.3.10-brave-concrete-results` ze dne `2026-06-17`.
 
 ## Cíl
 
@@ -17,6 +17,7 @@ Aplikace pomáhá dohledávat veřejné výroky známých osob hluboko do minulo
 - zdroj / médium,
 - typ zdroje: rozhovor, článek, tisková zpráva, sociální síť, investigativní web,
 - odkazy pro vyhledávání v médiích, veřejných databázích, rozhovorech, tiskových zprávách, sociálních sítích a investigativních webech,
+- viditelný souhrn počtu prohledávaných zdrojových okruhů a jejich kategorií,
 - až 30 zdrojů řazených podle relevance: nahoře TOP zdroje, níže archivní a starší zdroje,
 - funkce `expandSearchTerms(query)` pro technické rozšíření dotazu o související výrazy a varianty bez diakritiky,
 - označení, zda je výsledek podle přesného dotazu nebo podle souvisejícího výrazu,
@@ -51,6 +52,8 @@ Potřebná proměnná prostředí:
 - `BRAVE_SEARCH_API_KEY`
 
 Po nasazení serverové části frontend automaticky zavolá `/api/research` a karty se doplní o `quote`, `excerpt`, `contextExcerpt` a konkrétní body `sourceBrief` přímo ze zdrojů. Článek se celý neukládá ani nezobrazuje.
+
+Backend používá konkrétní položky z Brave Search (`title`, `url`, `description/snippet`, dostupné datum). Karta proto reprezentuje konkrétní článek; obecné okruhy zdrojů slouží jen jako záložní odkazy.
 
 ## Spuštění
 
