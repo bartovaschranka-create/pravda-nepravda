@@ -521,6 +521,130 @@ select:focus {
   font-weight: 800;
 }
 
+.person-resolution {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1.2rem;
+  background: rgba(8, 22, 38, 0.68);
+  backdrop-filter: blur(12px);
+}
+
+.person-resolution.hidden {
+  display: none;
+}
+
+.person-resolution-panel {
+  width: min(46rem, 100%);
+  max-height: min(42rem, 92vh);
+  overflow: auto;
+  border: 1px solid rgba(16, 32, 51, 0.12);
+  border-radius: var(--radius-large);
+  background: #ffffff;
+  box-shadow: 0 24px 80px rgba(8, 22, 38, 0.28);
+}
+
+.resolution-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.resolution-head h2 {
+  margin: 0.15rem 0 0.35rem;
+  color: var(--ink);
+  font-family: "Merriweather", Georgia, serif;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+}
+
+.resolution-head p:last-child {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.icon-button {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  justify-content: center;
+  padding: 0;
+  border-radius: 50%;
+  background: #eef4f5;
+  color: var(--ink);
+  font-size: 1.35rem;
+}
+
+.person-resolution-list {
+  display: grid;
+  gap: 0.65rem;
+  padding: 1rem 1.25rem;
+}
+
+.resolution-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  width: 100%;
+  padding: 0.85rem;
+  border: 1px solid rgba(16, 32, 51, 0.12);
+  border-radius: var(--radius);
+  background: #f8fbfb;
+  color: var(--ink);
+  text-align: left;
+}
+
+.resolution-card:hover {
+  border-color: var(--teal);
+  background: var(--teal-soft);
+}
+
+.resolution-card span:last-child {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.resolution-card strong {
+  font-size: 1rem;
+}
+
+.resolution-card small {
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.resolution-card em {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.resolution-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  justify-content: flex-end;
+  padding: 0 1.25rem 1.25rem;
+}
+
+.secondary-button {
+  border: 1px solid rgba(16, 32, 51, 0.14);
+  background: #ffffff;
+  color: var(--ink);
+}
+
+.secondary-button:hover {
+  background: #eef4f5;
+}
+
 .person-stance-summary {
   margin-top: 0.85rem;
   padding-top: 0.85rem;

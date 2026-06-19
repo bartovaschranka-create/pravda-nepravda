@@ -4,10 +4,11 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import handler from "./api/research.js";
+import personCandidatesHandler from "./api/person-candidates.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 4173);
-const VERSION = "0.3.23";
+const VERSION = "0.3.27";
 
 async function loadEnvFile() {
   const envPath = path.join(__dirname, ".env");
@@ -96,6 +97,12 @@ const server = http.createServer(async (req, res) => {
     if (req.url?.startsWith("/api/research")) {
       req.body = await readBody(req);
       await handler(req, createResponse(res));
+      return;
+    }
+
+    if (req.url?.startsWith("/api/person-candidates")) {
+      req.body = await readBody(req);
+      await personCandidatesHandler(req, createResponse(res));
       return;
     }
 

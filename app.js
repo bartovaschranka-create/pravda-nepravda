@@ -22,6 +22,13 @@ const personName = document.querySelector("#person-name");
 const personDescription = document.querySelector("#person-description");
 const personStanceSummary = document.querySelector("#person-stance-summary");
 const personCandidates = document.querySelector("#person-candidates");
+const personResolution = document.querySelector("#person-resolution");
+const personResolutionTitle = document.querySelector("#person-resolution-title");
+const personResolutionText = document.querySelector("#person-resolution-text");
+const personResolutionList = document.querySelector("#person-resolution-list");
+const personResolutionClose = document.querySelector("#person-resolution-close");
+const personResolutionRefine = document.querySelector("#person-resolution-refine");
+const personResolutionUseAnyway = document.querySelector("#person-resolution-use-anyway");
 const topicIntro = document.querySelector("#topic-intro");
 const topicIntroTitle = document.querySelector("#topic-intro-title");
 const topicIntroText = document.querySelector("#topic-intro-text");
@@ -43,8 +50,15 @@ const RESULT_LIMIT = 30;
 const EXCERPT_LIMIT = 260;
 const RESEARCH_ENDPOINT = "api/research";
 const DEFAULT_YEARS = [2007, 2011, 2014, 2017, 2021, 2026];
-const APP_VERSION = "0.3.23";
+const APP_VERSION = "0.3.27";
 let currentRecords = [];
+let confirmedPersonSignature = "";
+
+const PERSON_CANDIDATES_ENDPOINT = "api/person-candidates";
+
+const BLOCKED_SOURCE_DOMAINS = [
+  "azfirma.cz"
+];
 
 const TERM_EXPANSIONS = [
   {
@@ -451,11 +465,15 @@ const searchTargets = [
 ];
 
 function formatDate(dateValue) {
+  if (!dateValue) return "datum nezjištěno";
+  const date = new Date(`${dateValue}T12:00:00`);
+  if (Number.isNaN(date.getTime())) return "datum nezjištěno";
+
   return new Intl.DateTimeFormat("cs-CZ", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric"
-  }).format(new Date(`${dateValue}T12:00:00`));
+  }).format(date);
 }
 
 function buildQueryParts(filters) {
@@ -653,7 +671,7 @@ function renderSourceLinks(filters) {
   summary.className = "source-summary";
   summary.innerHTML = `
     <strong>Prohledává se ${searchTargets.length} okruhů zdrojů</strong>
-    <span>${groups.top || 0} hlavních médií · ${groups.investigative || 0} investigativní · ${groups.official || 0} oficiální · ${groups.archive || 0} archivní</span>
+    <span>${groups.top || 0} hlavních médií · ${groups.investigative || 0} investigativní · ${groups.official || 0} oficiální · ${groups.archive || 0} archivní/firemní/sociální</span>
   `;
   sourceLinks.append(summary);
 
@@ -1035,15 +1053,35 @@ function yearStatsFor(records) {
 }
 
 function recordUrl(record) {
-  return record.directUrl || record.searchUrl || "#";
+  const directUrl = record.directUrl || record.url || "";
+  if (directUrl && !isBlockedSourceUrl(directUrl)) {
+    return directUrl;
+  }
+
+  return record.searchUrl || "#";
 }
 
 function recordLinkText(record) {
-  return record.directUrl ? "Celý článek" : "Otevřít záložní hledání";
+  const directUrl = record.directUrl || record.url || "";
+  return directUrl && !isBlockedSourceUrl(directUrl) ? "Celý článek" : "Otevřít záložní hledání";
 }
 
 function hasConcreteArticleUrl(record) {
-  return Boolean(record.directUrl || record.url);
+  const directUrl = record.directUrl || record.url || "";
+  return Boolean(directUrl && !isBlockedSourceUrl(directUrl));
+}
+
+function hostnameFromUrlClient(url = "") {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function isBlockedSourceUrl(url = "") {
+  const hostname = hostnameFromUrlClient(url);
+  return BLOCKED_SOURCE_DOMAINS.some((domain) => hostname === domain || hostname.endsWith(`.${domain}`));
 }
 
 function periodFromRecords(records) {
@@ -1123,6 +1161,116 @@ function personCandidatesFor(query = "") {
   );
 }
 
+function personSignature(filters) {
+  return `${stripDiacritics(filters.person || "").toLowerCase().trim()}|${stripDiacritics(filters.personContext || "").toLowerCase().trim()}`;
+}
+
+function isPersonConfirmed(filters) {
+  return Boolean(confirmedPersonSignature && confirmedPersonSignature === personSignature(filters));
+}
+
+function mergePersonCandidates(localCandidates = [], remoteCandidates = [], fallbackName = "") {
+  const seen = new Set();
+  const merged = [];
+
+  [...localCandidates, ...remoteCandidates].forEach((candidate) => {
+    const name = candidate.name || fallbackName;
+    const role = candidate.role || "veřejně dohledatelná osoba";
+    const key = `${stripDiacritics(name).toLowerCase()}|${stripDiacritics(role).toLowerCase()}`;
+    if (!name || seen.has(key)) return;
+    seen.add(key);
+    merged.push({
+      name,
+      role,
+      context: candidate.context || candidate.source || "",
+      source: candidate.source || "",
+      url: candidate.url || "",
+      aliases: candidate.aliases || []
+    });
+  });
+
+  if (!merged.length && fallbackName) {
+    merged.push({
+      name: fallbackName,
+      role: "Bez jisté shody. Doplňte upřesnění, nebo pokračujte s tímto jménem.",
+      context: "",
+      source: "",
+      url: ""
+    });
+  }
+
+  return merged.slice(0, 10);
+}
+
+async function fetchPersonCandidates(filters) {
+  const localCandidates = personCandidatesFor(filters.person);
+
+  if (window.location.protocol === "file:") {
+    return mergePersonCandidates(localCandidates, [], filters.person);
+  }
+
+  try {
+    const response = await fetch(PERSON_CANDIDATES_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        person: filters.person,
+        personContext: filters.personContext
+      })
+    });
+
+    if (!response.ok) {
+      return mergePersonCandidates(localCandidates, [], filters.person);
+    }
+
+    const payload = await response.json();
+    return mergePersonCandidates(localCandidates, payload.candidates || [], filters.person);
+  } catch {
+    return mergePersonCandidates(localCandidates, [], filters.person);
+  }
+}
+
+function hidePersonResolution() {
+  personResolution.classList.add("hidden");
+  personResolution.setAttribute("aria-hidden", "true");
+}
+
+function showPersonResolution(filters, candidates = []) {
+  personResolutionTitle.textContent = `${filters.person}: vyberte správnou osobu`;
+  personResolutionText.textContent = "Nejdřív potvrďte, o koho jde. Teprve potom aplikace dohledá články, rozhovory a citace, aby se nemíchaly výsledky různých lidí se stejným jménem.";
+  personResolutionList.replaceChildren();
+
+  candidates.forEach((candidate) => {
+    const button = document.createElement("button");
+    const avatar = document.createElement("span");
+    const body = document.createElement("span");
+    const name = document.createElement("strong");
+    const role = document.createElement("small");
+    const source = document.createElement("em");
+
+    button.type = "button";
+    button.className = "resolution-card";
+    button.dataset.person = candidate.name;
+    button.dataset.context = candidate.context || "";
+
+    avatar.className = "candidate-avatar";
+    avatar.textContent = candidateInitials(candidate.name);
+
+    name.textContent = candidate.name;
+    role.textContent = candidate.role;
+    source.textContent = candidate.source ? `Zdroj vodítka: ${candidate.source}` : "Kliknutím potvrdit tuto osobu";
+
+    body.append(name, role, source);
+    button.append(avatar, body);
+    personResolutionList.append(button);
+  });
+
+  personResolution.classList.remove("hidden");
+  personResolution.setAttribute("aria-hidden", "false");
+}
+
 async function loadPublicPersonProfile(name) {
   if (!name || window.location.protocol === "file:") return null;
 
@@ -1145,17 +1293,19 @@ function candidateInitials(name = "") {
   return initialsFor(name) || "?";
 }
 
-function renderPersonCandidates(candidates = [], currentName = "") {
+function renderPersonCandidates(candidates = [], currentName = "", options = {}) {
   personCandidates.replaceChildren();
 
-  if (candidates.length <= 1) {
+  if (!candidates.length || (candidates.length <= 1 && !options.force)) {
     personCandidates.classList.add("hidden");
     return;
   }
 
   const note = document.createElement("p");
   note.className = "candidate-note";
-  note.textContent = "Jméno odpovídá více veřejným osobám. Upřesněte hledaný profil:";
+  note.textContent = candidates.length > 1
+    ? "Jméno odpovídá více veřejným osobám. Upřesněte hledaný profil:"
+    : "Nalezena možná shoda. Vyberte profil, nebo doplňte upřesnění osoby:";
   personCandidates.append(note);
 
   candidates.forEach((candidate) => {
@@ -1250,17 +1400,18 @@ function renderPersonProfile(filters, records = []) {
   const name = filters.person.trim();
   const displayName = displayPersonName(name);
   const candidates = personCandidatesFor(name);
+  const forceCandidates = Boolean(filters.forcePersonCandidates);
 
   setPersonAvatar(displayName);
   personName.textContent = displayName;
-  personDescription.textContent = candidates.length > 1
+  personDescription.textContent = candidates.length > 1 || forceCandidates
     ? `Zadané jméno může odpovídat více veřejným osobám. Vyberte konkrétní profil, aby se výsledky nepletly mezi různé osoby.`
     : shortProfileFallback(displayName, records);
-  renderPersonCandidates(candidates, displayName);
-  renderPersonStanceSummary(candidates.length > 1 ? [] : records);
+  renderPersonCandidates(candidates, displayName, { force: forceCandidates });
+  renderPersonStanceSummary(candidates.length > 1 || forceCandidates ? [] : records);
   personProfile.classList.toggle("hidden", !name);
 
-  if (candidates.length > 1) {
+  if (candidates.length > 1 || forceCandidates) {
     return;
   }
 
@@ -1385,10 +1536,10 @@ function normalizeAiRecord(record, index) {
     timeContext: record.timeContext || "Záznam doplňuje časovou souvislost tématu a pomáhá zařadit citaci nebo článek do širšího přehledu.",
     scoreLabel: record.scoreLabel || scoreLabelFor(Number(record.relevanceScore || 0)),
     statementQuote: record.statementQuote || "",
-    directUrl: record.directUrl || record.url || "",
+    directUrl: isBlockedSourceUrl(record.directUrl || record.url || "") ? "" : (record.directUrl || record.url || ""),
     searchUrl: record.searchUrl || "",
     isLiveResult: Boolean(record.isLiveResult),
-    isConcreteArticle: Boolean(record.isLiveResult && (record.directUrl || record.url))
+    isConcreteArticle: Boolean(record.isLiveResult && hasConcreteArticleUrl(record))
   };
 }
 
@@ -1411,6 +1562,55 @@ function cleanNormalizedRecord(record) {
     scoreLabel: cleanDisplayText(record.scoreLabel),
     statementQuote: cleanDisplayText(record.statementQuote)
   };
+}
+
+function isExactKnownCandidate(person = "") {
+  const normalized = stripDiacritics(person).toLowerCase().trim();
+  return PERSON_CANDIDATES.some((candidate) => stripDiacritics(candidate.name).toLowerCase() === normalized);
+}
+
+function shouldGatePersonSelection(filters) {
+  const name = filters.person.trim();
+  if (!name || isPersonConfirmed(filters)) return false;
+
+  const candidates = personCandidatesFor(name);
+  const isSingleWord = name.split(/\s+/).filter(Boolean).length === 1;
+
+  if (isExactKnownCandidate(name) && !filters.personContext) return true;
+  if (candidates.length > 1) return true;
+  if (isSingleWord && candidates.length >= 1 && !filters.personContext) return true;
+  if (isSingleWord && !filters.personContext) return true;
+  if (name.split(/\s+/).filter(Boolean).length >= 2) return true;
+
+  return false;
+}
+
+async function renderPersonSelectionGate(filters) {
+  const candidates = await fetchPersonCandidates(filters);
+  const gatedFilters = { ...filters, forcePersonCandidates: true };
+
+  resultTitle.textContent = `${filters.person}: upřesnění osoby`;
+  renderSourceLinks(filters);
+  renderPersonProfile(gatedFilters, []);
+  summaryCard.classList.add("hidden");
+  topicIntro.classList.add("hidden");
+  recommendedSection.classList.add("hidden");
+  yearSection.classList.add("hidden");
+  relatedSection.classList.add("hidden");
+  statementsSection.classList.add("hidden");
+  quoteCardsSection.classList.add("hidden");
+  timeline.replaceChildren();
+  quoteCards.replaceChildren();
+  emptyState.classList.add("hidden");
+
+  showPersonResolution(filters, candidates);
+
+  if (candidates.length) {
+    setAiStatus("Nejdřív vyberte konkrétní osobu. Hledání článků se spustí až po potvrzení, aby se nemíchaly výsledky různých lidí.", "is-warning");
+  } else {
+    personDescription.textContent = "Zadané jméno je příliš obecné. Doplňte celé jméno nebo upřesnění osoby, například zaměstnavatel, město, obor nebo funkci.";
+    setAiStatus("Doplňte upřesnění osoby, aby hledání nevracelo obecné nebo cizí výsledky.", "is-warning");
+  }
 }
 
 async function fetchAiRecords(filters) {
@@ -1713,7 +1913,12 @@ function renderStatements(records) {
 
   const statements = records
     .filter((record) => record.statementQuote || record.quote || record.excerpt || record.type === "Rozhovor")
-    .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")))
+    .sort((a, b) => {
+      if (a.date && b.date) return String(a.date).localeCompare(String(b.date));
+      if (a.date) return -1;
+      if (b.date) return 1;
+      return String(a.source || "").localeCompare(String(b.source || ""));
+    })
     .slice(0, 8);
 
   if (!statements.length) {
@@ -1845,7 +2050,42 @@ personCandidates.addEventListener("click", (event) => {
   if (button.dataset.context) {
     personContextInput.value = button.dataset.context;
   }
+  confirmedPersonSignature = personSignature(collectFilters());
   form.requestSubmit();
+});
+
+personResolutionList.addEventListener("click", (event) => {
+  const button = event.target.closest("button[data-person]");
+  if (!button) {
+    return;
+  }
+
+  personInput.value = button.dataset.person;
+  if (button.dataset.context) {
+    personContextInput.value = button.dataset.context;
+  }
+  confirmedPersonSignature = personSignature(collectFilters());
+  hidePersonResolution();
+  form.requestSubmit();
+});
+
+personResolutionClose.addEventListener("click", hidePersonResolution);
+
+personResolutionRefine.addEventListener("click", () => {
+  hidePersonResolution();
+  personContextInput.focus();
+});
+
+personResolutionUseAnyway.addEventListener("click", () => {
+  confirmedPersonSignature = personSignature(collectFilters());
+  hidePersonResolution();
+  form.requestSubmit();
+});
+
+[personInput, personContextInput].forEach((input) => {
+  input.addEventListener("input", () => {
+    confirmedPersonSignature = "";
+  });
 });
 
 form.addEventListener("submit", async (event) => {
@@ -1853,6 +2093,11 @@ form.addEventListener("submit", async (event) => {
   const filters = collectFilters();
 
   if (!filters.person || !filters.keywords) {
+    return;
+  }
+
+  if (shouldGatePersonSelection(filters)) {
+    await renderPersonSelectionGate(filters);
     return;
   }
 

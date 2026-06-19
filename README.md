@@ -2,7 +2,7 @@
 
 Statické MVP webové aplikace pro GitHub Pages.
 
-Aktuální verze: `0.3.23-deeper-source-search` ze dne `2026-06-17`.
+Aktuální verze: `0.3.27-date-extraction` ze dne `2026-06-19`.
 
 ## Cíl
 

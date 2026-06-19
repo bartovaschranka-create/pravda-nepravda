@@ -4,12 +4,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="Archiv výroků: dohledatelné veřejné výroky, citace a zdroje v časovém kontextu.">
-    <meta name="app-version" content="0.3.23-deeper-source-search">
+    <meta name="app-version" content="0.3.27-date-extraction">
     <title>Archiv výroků</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Merriweather:wght@700;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css?v=0.3.23">
+    <link rel="stylesheet" href="styles.css?v=0.3.27">
   </head>
   <body>
     <main class="app-shell">
@@ -94,7 +94,7 @@
         </div>
 
         <div class="version-badge" aria-label="Verze aplikace">
-          verze 0.3.23
+          verze 0.3.27
         </div>
       </section>
 
@@ -252,6 +252,24 @@
       </article>
     </template>
 
-    <script src="app.js?v=0.3.23"></script>
+    <section id="person-resolution" class="person-resolution hidden" aria-hidden="true" aria-label="Upřesnění hledané osoby">
+      <div class="person-resolution-panel" role="dialog" aria-modal="true" aria-labelledby="person-resolution-title">
+        <div class="resolution-head">
+          <div>
+            <p class="eyebrow">Upřesnění osoby</p>
+            <h2 id="person-resolution-title">Vyberte správnou osobu</h2>
+            <p id="person-resolution-text"></p>
+          </div>
+          <button id="person-resolution-close" type="button" class="icon-button" aria-label="Zavřít">×</button>
+        </div>
+        <div id="person-resolution-list" class="person-resolution-list"></div>
+        <div class="resolution-actions">
+          <button id="person-resolution-refine" type="button" class="secondary-button">Doplnit upřesnění</button>
+          <button id="person-resolution-use-anyway" type="button" class="secondary-button">Pokračovat s tímto jménem</button>
+        </div>
+      </div>
+    </section>
+
+    <script src="app.js?v=0.3.27"></script>
   </body>
 </html>
